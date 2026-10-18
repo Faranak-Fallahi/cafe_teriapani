@@ -2,11 +2,31 @@ import { useCallback, useState } from 'react'
 import { ArrowRight, Coffee } from 'lucide-react'
 import { categories } from '../data/categories.js'
 import { CategoryCard } from './CategoryCard.jsx'
+import { SpecialOffersScreen } from './SpecialOffersScreen.jsx'
 import { Toast } from './Toast.jsx'
 
 export function CategoriesScreen({ onBack, mascotAnchorRef }) {
   const [toastMessage, setToastMessage] = useState('')
+  const [activeCategory, setActiveCategory] = useState(null)
   const dismissToast = useCallback(() => setToastMessage(''), [])
+
+  const openCategory = (category) => {
+    if (category.id === 'weekly-pick') {
+      setToastMessage('')
+      setActiveCategory('special-offers')
+      return
+    }
+    setToastMessage(`«${category.title}» در مرحله‌ی بعد آماده می‌شود.`)
+  }
+
+  if (activeCategory === 'special-offers') {
+    return (
+      <SpecialOffersScreen
+        onBack={() => setActiveCategory(null)}
+        mascotAnchorRef={mascotAnchorRef}
+      />
+    )
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -38,7 +58,7 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
             <CategoryCard
               key={category.id}
               category={category}
-              onSelect={(selected) => setToastMessage(`«${selected.title}» در مرحله‌ی بعد آماده می‌شود.`)}
+              onSelect={openCategory}
             />
           ))}
         </section>
