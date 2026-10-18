@@ -109,6 +109,34 @@
   background: #fff4df;
 }
 
+.category-brand {
+  min-width: 0;
+}
+
+.header-mascot {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.header-mascot-image {
+  flex: 0 0 3.5rem;
+}
+
+.header-speech {
+  max-width: 7rem;
+  border: 1px solid rgb(61 41 36 / 13%);
+  border-radius: 1.1rem;
+  background: #ffd166;
+  padding: 0.4rem 0.65rem;
+  color: #3d2924;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.4;
+  box-shadow: 0 3px 9px rgb(61 41 36 / 8%);
+}
+
 .category-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -210,36 +238,7 @@
 }
 
 .category-scroll {
-  padding-bottom: 7.5rem;
-}
-
-.docked-mascot {
-  position: absolute;
-  z-index: 4;
-  bottom: 0.55rem;
-  left: 0.65rem;
-  display: flex;
-  align-items: flex-end;
-  gap: 0.4rem;
-  pointer-events: none;
-}
-
-.docked-mascot-image {
-  flex: 0 0 4.5rem;
-}
-
-.docked-speech {
-  max-width: 10.5rem;
-  margin-bottom: 0.6rem;
-  border: 1px solid rgb(61 41 36 / 13%);
-  border-radius: 1.1rem;
-  background: #ffd166;
-  padding: 0.45rem 0.7rem;
-  color: #3d2924;
-  font-size: 0.75rem;
-  font-weight: 800;
-  line-height: 1.45;
-  box-shadow: 0 3px 9px rgb(61 41 36 / 8%);
+  padding-bottom: 1.25rem;
 }
 
 .back-button {
@@ -250,7 +249,7 @@
   position: absolute;
   z-index: 3;
   right: 50%;
-  bottom: 6rem;
+  bottom: 1rem;
   display: flex;
   max-width: calc(100% - 5.5rem);
   align-items: center;
@@ -277,7 +276,13 @@
 @media (max-width: 360px) {
   .category-card { gap: 0.35rem; padding-inline: 0.5rem; }
   .category-sticker { width: 3rem; height: 3rem; flex-basis: 3rem; font-size: 2.2rem; }
-  .docked-speech { max-width: 8.5rem; }
+  .category-brand { gap: 0.25rem; }
+  .category-brand-icon { width: 23px; height: 23px; }
+  .category-brand-title { font-size: 1.25rem; }
+  .category-brand .back-button { width: 2rem; height: 2rem; }
+  .header-mascot { gap: 0.25rem; }
+  .header-speech { max-width: 5rem; padding: 0.3rem 0.4rem; font-size: 0.62rem; }
+  .header-mascot-image { width: 3.5rem; height: 3.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

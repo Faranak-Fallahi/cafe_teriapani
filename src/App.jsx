@@ -1,18 +1,29 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'framer-motion'
 import { CategoriesScreen } from './components/CategoriesScreen.jsx'
 import { WelcomeScreen } from './components/WelcomeScreen.jsx'
 
 function App() {
   const [screen, setScreen] = useState('welcome')
+  const transitionTimerRef = useRef(null)
   const prefersReducedMotion = useReducedMotion()
-  const enterMenu = useCallback(() => setScreen('categories'), [])
+  const enterMenu = useCallback(() => {
+    if (transitionTimerRef.current !== null) {
+      window.clearTimeout(transitionTimerRef.current)
+      transitionTimerRef.current = null
+    }
+    setScreen('categories')
+  }, [])
 
   useEffect(() => {
     if (screen !== 'welcome') return undefined
 
-    const timeoutId = window.setTimeout(enterMenu, 1500)
-    return () => window.clearTimeout(timeoutId)
+    const timeoutId = window.setTimeout(enterMenu, 3800)
+    transitionTimerRef.current = timeoutId
+    return () => {
+      window.clearTimeout(timeoutId)
+      if (transitionTimerRef.current === timeoutId) transitionTimerRef.current = null
+    }
   }, [screen, enterMenu])
 
   return (

@@ -11,12 +11,12 @@ export function CategoriesScreen({ onBack, prefersReducedMotion }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="category-header flex shrink-0 items-center px-5 pb-3 pt-5 sm:px-6">
-        <div className="flex items-center gap-2">
-          <Coffee className="text-primary" size={27} aria-hidden="true" />
+      <header className="category-header flex shrink-0 items-center justify-between px-5 pb-3 pt-5 sm:px-6">
+        <div className="category-brand flex items-center gap-2">
+          <Coffee className="category-brand-icon text-primary" size={27} aria-hidden="true" />
           <div>
             <p className="text-[11px] font-medium leading-tight text-dark/60">کافه</p>
-            <h1 className="text-2xl font-extrabold leading-tight text-dark">تریاپانی</h1>
+            <h1 className="category-brand-title text-2xl font-extrabold leading-tight text-dark">تریاپانی</h1>
           </div>
           <button
             type="button"
@@ -27,6 +27,22 @@ export function CategoriesScreen({ onBack, prefersReducedMotion }) {
             <ArrowRight size={21} aria-hidden="true" />
           </button>
         </div>
+        <motion.aside
+          className="header-mascot"
+          aria-label="راهنمای منوی تریاپانی"
+          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0.05 : 0.25 }}
+        >
+          <div className="header-speech">چی میل داری؟</div>
+          <motion.img
+            layoutId="mascot-character"
+            src="/assets/mascot.webp"
+            alt="مسکات تریاپانی"
+            className="header-mascot-image h-14 w-14 object-contain"
+            transition={{ layout: prefersReducedMotion ? { duration: 0.01 } : { type: 'spring', stiffness: 150, damping: 23, mass: 0.85 } }}
+          />
+        </motion.aside>
       </header>
 
       <div className="category-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-5 pt-2 sm:px-5">
@@ -41,22 +57,6 @@ export function CategoriesScreen({ onBack, prefersReducedMotion }) {
         </section>
       </div>
 
-      <motion.aside
-        className="docked-mascot"
-        aria-label="راهنمای منوی تریاپانی"
-        initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: prefersReducedMotion ? 0.05 : 0.25 }}
-      >
-        <div className="docked-speech">امروز دلت چی می‌خواد؟</div>
-        <motion.img
-          layoutId="mascot-character"
-          src="/assets/mascot.webp"
-          alt="مسکات تریاپانی"
-          className="docked-mascot-image h-[4.5rem] w-[4.5rem] object-contain"
-          transition={{ layout: prefersReducedMotion ? { duration: 0.01 } : { type: 'spring', stiffness: 150, damping: 23, mass: 0.85 } }}
-        />
-      </motion.aside>
       <Toast message={toastMessage} onDismiss={dismissToast} />
     </div>
   )
