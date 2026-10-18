@@ -1,11 +1,10 @@
 import { useCallback, useState } from 'react'
 import { ArrowRight, Coffee } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { categories } from '../data/categories.js'
 import { CategoryCard } from './CategoryCard.jsx'
 import { Toast } from './Toast.jsx'
 
-export function CategoriesScreen({ onBack, prefersReducedMotion }) {
+export function CategoriesScreen({ onBack, mascotAnchorRef }) {
   const [toastMessage, setToastMessage] = useState('')
   const dismissToast = useCallback(() => setToastMessage(''), [])
 
@@ -27,22 +26,10 @@ export function CategoriesScreen({ onBack, prefersReducedMotion }) {
             <ArrowRight size={21} aria-hidden="true" />
           </button>
         </div>
-        <motion.aside
-          className="header-mascot"
-          aria-label="راهنمای منوی تریاپانی"
-          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: prefersReducedMotion ? 0.05 : 0.25 }}
-        >
+        <aside className="header-mascot" aria-label="راهنمای منوی تریاپانی">
           <div className="header-speech">چی میل داری؟</div>
-          <motion.img
-            layoutId="mascot-character"
-            src="/assets/mascot.webp"
-            alt="مسکات تریاپانی"
-            className="header-mascot-image h-14 w-14 object-contain"
-            transition={{ layout: prefersReducedMotion ? { duration: 0.01 } : { type: 'spring', stiffness: 150, damping: 23, mass: 0.85 } }}
-          />
-        </motion.aside>
+          <div ref={mascotAnchorRef} className="header-mascot-anchor h-14 w-14" aria-hidden="true" />
+        </aside>
       </header>
 
       <div className="category-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-5 pt-2 sm:px-5">

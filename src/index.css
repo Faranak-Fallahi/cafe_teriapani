@@ -22,6 +22,33 @@
   position: relative;
 }
 
+.app-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-layer--active {
+  visibility: visible;
+}
+
+.app-layer--inactive {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mascot-flight {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  object-fit: contain;
+  pointer-events: none;
+  will-change: transform, width, height;
+}
+
 .welcome-screen {
   background-color: #fff4df;
   background-image: radial-gradient(ellipse at 0% 0%, #ffd166 0 6%, transparent 6.2%), radial-gradient(ellipse at 100% 100%, #ffd166 0 6%, transparent 6.2%);
@@ -56,10 +83,6 @@
   width: min(100%, 22rem);
   height: clamp(15rem, 41vh, 21rem);
   place-items: center;
-}
-
-.welcome-mascot {
-  z-index: 1;
 }
 
 .welcome-doodle {
@@ -120,7 +143,9 @@
   gap: 0.4rem;
 }
 
-.header-mascot-image {
+.header-mascot-anchor {
+  width: 3.5rem;
+  height: 3.5rem;
   flex: 0 0 3.5rem;
 }
 
@@ -282,7 +307,7 @@
   .category-brand .back-button { width: 2rem; height: 2rem; }
   .header-mascot { gap: 0.25rem; }
   .header-speech { max-width: 5rem; padding: 0.3rem 0.4rem; font-size: 0.62rem; }
-  .header-mascot-image { width: 3.5rem; height: 3.5rem; }
+  .header-mascot-anchor { width: 3.5rem; height: 3.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

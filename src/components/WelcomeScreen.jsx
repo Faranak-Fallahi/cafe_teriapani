@@ -10,7 +10,7 @@ const doodles = [
   { id: 'drops', Icon: Droplets, className: 'welcome-doodle--drops', tone: 'text-primary/70', rotate: -14 },
 ]
 
-export function WelcomeScreen({ onEnter, prefersReducedMotion }) {
+export function WelcomeScreen({ onEnter, prefersReducedMotion, doodlesActive, mascotAnchorRef }) {
   return (
     <section aria-label="صفحه‌ی خوش‌آمد تریاپانی" className="welcome-screen flex min-h-0 flex-1 flex-col items-center justify-between overflow-y-auto px-7 pb-8 pt-7 text-center sm:px-9 sm:pt-9">
       <div className="flex w-full flex-col items-center">
@@ -25,18 +25,16 @@ export function WelcomeScreen({ onEnter, prefersReducedMotion }) {
               key={id}
               className={`welcome-doodle ${className} ${tone}`}
               aria-hidden="true"
-              animate={prefersReducedMotion ? undefined : { y: [0, -7, 0], rotate: [rotate, rotate + 5, rotate] }}
+              animate={prefersReducedMotion || !doodlesActive ? false : { y: [0, -7, 0], rotate: [rotate, rotate + 5, rotate] }}
               transition={{ duration: 2.8 + index * 0.25, delay: index * 0.12, repeat: Infinity, ease: 'easeInOut' }}
             >
               <Icon size={28} strokeWidth={1.7} />
             </motion.span>
           ))}
-          <motion.img
-            layoutId="mascot-character"
-            src="/assets/mascot.webp"
-            alt="مسکات لبخندزن تریاپانی با لباس نارنجی"
-            className="welcome-mascot h-64 w-64 max-w-full object-contain sm:h-[17rem] sm:w-[17rem]"
-            transition={{ layout: prefersReducedMotion ? { duration: 0.01 } : { type: 'spring', stiffness: 150, damping: 23, mass: 0.85 } }}
+          <div
+            ref={mascotAnchorRef}
+            className="welcome-mascot-anchor h-64 w-64 max-w-full sm:h-[17rem] sm:w-[17rem]"
+            aria-hidden="true"
           />
         </div>
       </div>
