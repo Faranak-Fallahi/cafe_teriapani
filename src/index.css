@@ -333,22 +333,20 @@
 
 .subcategory-list {
   display: flex;
-  gap: 0.55rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  padding: 0.25rem 0 0.7rem;
   direction: rtl;
-  scrollbar-width: none;
   touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: touch;
 }
-.subcategory-list::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
 .subcategory-chip {
   display: inline-flex;
   min-height: 3.15rem;
   min-width: 5.6rem;
-  flex: 0 0 auto;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   border: 1px solid rgb(242 106 46 / 15%);
@@ -364,6 +362,12 @@
 .subcategory-chip:focus-visible { outline: 3px solid #3d2924; outline-offset: 2px; }
 .subcategory-chip--active { border-color: #f26a2e; background: #f26a2e; color: #fff4df; }
 .category-product-list { padding-top: 0.25rem; }
+
+.category-fun-title {
+  max-width: 9rem;
+  font-size: clamp(0.78rem, 3.7vw, 1.05rem);
+  overflow-wrap: anywhere;
+}
 
 .offers-list-heading {
   margin: 0.8rem 0 0.7rem;
@@ -503,6 +507,7 @@
   .category-brand { gap: 0.25rem; }
   .category-brand-icon { width: 23px; height: 23px; }
   .category-brand-title { font-size: 1.25rem; }
+  .category-fun-title { font-size: clamp(0.78rem, 3.7vw, 1.05rem); }
   .category-brand .back-button { width: 2rem; height: 2rem; }
   .header-mascot { gap: 0.25rem; }
   .header-speech { max-width: 5rem; padding: 0.3rem 0.4rem; font-size: 0.62rem; }

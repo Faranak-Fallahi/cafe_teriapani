@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { ArrowRight, Coffee } from 'lucide-react'
-import { categories } from '../data/categories.js'
+import { menuCategories } from '../data/menuData.js'
 import { CategoryCard } from './CategoryCard.jsx'
 import { CategoryProductsScreen } from './CategoryProductsScreen.jsx'
 import { Toast } from './Toast.jsx'
@@ -9,7 +9,7 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
   const [toastMessage, setToastMessage] = useState('')
   const [activeCategory, setActiveCategory] = useState(null)
   const dismissToast = useCallback(() => setToastMessage(''), [])
-  const visibleCategories = categories
+  const visibleCategories = menuCategories
     .filter((category) => category.isActive !== false)
     .sort((left, right) => left.order - right.order)
 

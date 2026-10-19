@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Coffee, Star } from 'lucide-react'
-import { categories } from '../data/categories.js'
+import { menuCategories } from '../data/menuData.js'
 import { menuProducts } from '../data/menuProducts.js'
 import { menuSubcategories } from '../data/menuTaxonomy.js'
 
@@ -15,7 +15,7 @@ function ProductImage({ product, className = '' }) {
 export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) {
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState(null)
-  const category = categories.find((item) => item.id === categoryId)
+  const category = menuCategories.find((item) => item.id === categoryId)
   const subcategories = menuSubcategories
     .filter((item) => item.categoryId === categoryId && item.isActive !== false)
     .sort((left, right) => left.order - right.order)
@@ -40,7 +40,7 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
           <Coffee className="category-brand-icon text-primary" size={27} aria-hidden="true" />
           <div>
             <p className="text-[11px] font-medium leading-tight text-dark/60">منوی کافه</p>
-            <h1 className="category-brand-title text-2xl font-extrabold leading-tight text-dark">{category.title}</h1>
+            <h1 className="category-brand-title category-fun-title font-extrabold leading-tight text-dark">{category.funTitle}</h1>
           </div>
           <button
             type="button"
@@ -52,7 +52,7 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
           </button>
         </div>
         <aside className="header-mascot" aria-label="راهنمای منوی تریاپانی">
-          <div className="header-speech">چی میل داری؟</div>
+          <div className="header-speech">{category.mascotMessage}</div>
           <div ref={mascotAnchorRef} className="header-mascot-anchor h-14 w-14" aria-hidden="true" />
         </aside>
       </header>
@@ -69,7 +69,7 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
         </section>
       ) : (
         <div className="category-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-5 pt-2 sm:px-5">
-          <nav className="subcategory-list" aria-label={`زیردسته‌های ${category.title}`}>
+          <nav className="subcategory-list flex w-full touch-pan-x gap-2 overflow-x-auto px-4 py-2 scroll-smooth no-scrollbar" aria-label={`زیردسته‌های ${category.title}`}>
             <button
               type="button"
               className={`subcategory-chip ${selectedSubcategoryId === 'all' ? 'subcategory-chip--active' : ''}`}
