@@ -1,12 +1,15 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Coffee, Star } from 'lucide-react'
 import { menuCategories } from '../data/menuData.js'
 import { menuProducts } from '../data/menuProducts.js'
 import { menuSubcategories } from '../data/menuTaxonomy.js'
+import { ProductDetailModal } from './ProductDetailModal.jsx'
 
 function ProductImage({ product, className = '' }) {
-  return product.imagePath ? (
-    <img className={`offer-image ${className}`} src={product.imagePath} alt={product.name} />
+  const image = product.image ?? product.imagePath ?? ''
+  return image ? (
+    <img className={`offer-image ${className}`} src={image} alt={product.name} />
   ) : (
     <div className={`offer-image offer-image--empty ${className}`} aria-label="جای تصویر محصول" />
   )
@@ -15,6 +18,7 @@ function ProductImage({ product, className = '' }) {
 export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) {
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const closeProductDetails = useCallback(() => setSelectedProduct(null), [])
   const subcategoryTrackRef = useRef(null)
   const subcategoryTrackId = `subcategory-track-${useId().replace(/:/g, '')}`
   const [scrollEdges, setScrollEdges] = useState({ canScrollLeft: false, canScrollRight: false })
@@ -82,7 +86,7 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
           </div>
           <button
             type="button"
-            onClick={selectedProduct ? () => setSelectedProduct(null) : onBack}
+            onClick={selectedProduct ? closeProductDetails : onBack}
             className="back-button inline-flex h-10 w-10 items-center justify-center rounded-full text-dark transition hover:bg-secondary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary"
             aria-label={selectedProduct ? 'بازگشت به فهرست محصولات' : 'بازگشت به دسته‌بندی‌ها'}
           >
@@ -95,18 +99,7 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
         </aside>
       </header>
 
-      {selectedProduct ? (
-        <section className="offer-detail category-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-5 pt-4 sm:px-5" aria-label={`جزئیات ${selectedProduct.name}`}>
-          <ProductImage product={selectedProduct} className="offer-detail-image" />
-          <div className="offer-detail-copy">
-            {selectedProduct.badge && <span className="offer-badge"><Star size={15} fill="currentColor" aria-hidden="true" />{selectedProduct.badge}</span>}
-            <h2>{selectedProduct.name}</h2>
-            <p>{selectedProduct.description}</p>
-            <strong>{selectedProduct.displayPrice}</strong>
-          </div>
-        </section>
-      ) : (
-        <div className="category-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-5 pt-2 sm:px-5">
+      <div className="category-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-5 pt-2 sm:px-5">
           <div className="subcategory-nav-shell">
             <button
               type="button"
@@ -179,9 +172,18 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
                 ? 'برای این زیردسته فعلاً محصولی ثبت نشده است.'
                 : 'برای این دسته فعلاً محصولی ثبت نشده است.'}
             </p>
-          )}
-        </div>
-      )}
+        )}
+      </div>
+      <AnimatePresence>
+        {selectedProduct && (
+          <ProductDetailModal
+            key="product-detail"
+            product={selectedProduct}
+            onClose={closeProductDetails}
+            onSelectProduct={setSelectedProduct}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
