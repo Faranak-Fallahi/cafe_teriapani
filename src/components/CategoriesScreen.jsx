@@ -2,26 +2,31 @@ import { useCallback, useState } from 'react'
 import { ArrowRight, Coffee } from 'lucide-react'
 import { categories } from '../data/categories.js'
 import { CategoryCard } from './CategoryCard.jsx'
-import { SpecialOffersScreen } from './SpecialOffersScreen.jsx'
+import { CategoryProductsScreen } from './CategoryProductsScreen.jsx'
 import { Toast } from './Toast.jsx'
 
 export function CategoriesScreen({ onBack, mascotAnchorRef }) {
   const [toastMessage, setToastMessage] = useState('')
   const [activeCategory, setActiveCategory] = useState(null)
   const dismissToast = useCallback(() => setToastMessage(''), [])
+  const visibleCategories = categories
+    .filter((category) => category.isActive !== false)
+    .sort((left, right) => left.order - right.order)
 
   const openCategory = (category) => {
     if (category.id === 'weekly-pick') {
       setToastMessage('')
-      setActiveCategory('special-offers')
+      setActiveCategory(category.id)
       return
     }
-    setToastMessage(`«${category.title}» در مرحله‌ی بعد آماده می‌شود.`)
+    setToastMessage('')
+    setActiveCategory(category.id)
   }
 
-  if (activeCategory === 'special-offers') {
+  if (activeCategory) {
     return (
-      <SpecialOffersScreen
+      <CategoryProductsScreen
+        categoryId={activeCategory}
         onBack={() => setActiveCategory(null)}
         mascotAnchorRef={mascotAnchorRef}
       />
@@ -54,7 +59,7 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
 
       <div className="category-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-5 pt-2 sm:px-5">
         <section className="category-grid" aria-label="دسته‌بندی‌های منو">
-          {categories.map((category) => (
+          {visibleCategories.map((category) => (
             <CategoryCard
               key={category.id}
               category={category}
