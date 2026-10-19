@@ -342,6 +342,32 @@
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
+.subcategory-nav-shell {
+  display: grid;
+  grid-template-columns: 2.35rem minmax(0, 1fr) 2.35rem;
+  align-items: center;
+  gap: 0.2rem;
+  direction: ltr;
+}
+
+.subcategory-scroll-arrow {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 0;
+  border-radius: 9999px;
+  background: #f26a2e;
+  color: #fff4df;
+  transition: background-color 140ms ease, color 140ms ease, opacity 140ms ease;
+}
+.subcategory-scroll-arrow:focus-visible { outline: 3px solid #3d2924; outline-offset: 2px; }
+.subcategory-scroll-arrow:disabled {
+  background: #e8e4dc;
+  color: #aaa49a;
+  cursor: default;
+}
+
 .subcategory-chip {
   display: inline-flex;
   min-height: 3.15rem;

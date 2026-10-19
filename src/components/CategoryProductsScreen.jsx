@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ArrowLeft, ArrowRight, Coffee, Star } from 'lucide-react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Coffee, Star } from 'lucide-react'
 import { menuCategories } from '../data/menuData.js'
 import { menuProducts } from '../data/menuProducts.js'
 import { menuSubcategories } from '../data/menuTaxonomy.js'
@@ -15,6 +15,9 @@ function ProductImage({ product, className = '' }) {
 export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) {
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const subcategoryTrackRef = useRef(null)
+  const subcategoryTrackId = `subcategory-track-${useId().replace(/:/g, '')}`
+  const [scrollEdges, setScrollEdges] = useState({ canScrollLeft: false, canScrollRight: false })
   const category = menuCategories.find((item) => item.id === categoryId)
   const subcategories = menuSubcategories
     .filter((item) => item.categoryId === categoryId && item.isActive !== false)
@@ -23,6 +26,41 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
   const visibleProducts = selectedSubcategoryId === 'all'
     ? categoryProducts
     : categoryProducts.filter((product) => product.subcategoryId === selectedSubcategoryId)
+
+  useLayoutEffect(() => {
+    const track = subcategoryTrackRef.current
+    if (!track) return undefined
+
+    const updateScrollEdges = () => {
+      const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth)
+      const offsetFromRight = Math.max(0, Math.min(maxScroll, -track.scrollLeft))
+      const nextEdges = {
+        canScrollLeft: maxScroll - offsetFromRight > 1,
+        canScrollRight: offsetFromRight > 1,
+      }
+      setScrollEdges((currentEdges) => (
+        currentEdges.canScrollLeft === nextEdges.canScrollLeft
+          && currentEdges.canScrollRight === nextEdges.canScrollRight
+          ? currentEdges
+          : nextEdges
+      ))
+    }
+
+    const resizeObserver = new ResizeObserver(updateScrollEdges)
+    resizeObserver.observe(track)
+    if (track.firstElementChild) resizeObserver.observe(track.firstElementChild)
+    track.addEventListener('scroll', updateScrollEdges, { passive: true })
+    updateScrollEdges()
+
+    return () => {
+      resizeObserver.disconnect()
+      track.removeEventListener('scroll', updateScrollEdges)
+    }
+  }, [categoryId, subcategories.length])
+
+  const scrollSubcategories = (direction) => {
+    subcategoryTrackRef.current?.scrollBy({ left: direction * 200, behavior: 'smooth' })
+  }
 
   if (!category) {
     return (
@@ -69,27 +107,54 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
         </section>
       ) : (
         <div className="category-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-5 pt-2 sm:px-5">
-          <nav className="subcategory-list flex w-full touch-pan-x gap-2 overflow-x-auto px-4 py-2 scroll-smooth no-scrollbar" aria-label={`زیردسته‌های ${category.title}`}>
+          <div className="subcategory-nav-shell">
             <button
               type="button"
-              className={`subcategory-chip ${selectedSubcategoryId === 'all' ? 'subcategory-chip--active' : ''}`}
-              aria-pressed={selectedSubcategoryId === 'all'}
-              onClick={() => setSelectedSubcategoryId('all')}
+              className="subcategory-scroll-arrow"
+              aria-label="پیمایش به گزینه‌های سمت چپ"
+              aria-controls={subcategoryTrackId}
+              disabled={!scrollEdges.canScrollLeft}
+              onClick={() => scrollSubcategories(-1)}
             >
-              همه
+              <ChevronLeft size={22} aria-hidden="true" />
             </button>
-            {subcategories.map((subcategory) => (
+            <nav
+              ref={subcategoryTrackRef}
+              id={subcategoryTrackId}
+              className="subcategory-list flex w-full touch-pan-x gap-2 overflow-x-auto px-4 py-2 scroll-smooth no-scrollbar"
+              aria-label={`زیردسته‌های ${category.title}`}
+            >
               <button
-                key={subcategory.id}
                 type="button"
-                className={`subcategory-chip ${selectedSubcategoryId === subcategory.id ? 'subcategory-chip--active' : ''}`}
-                aria-pressed={selectedSubcategoryId === subcategory.id}
-                onClick={() => setSelectedSubcategoryId(subcategory.id)}
+                className={`subcategory-chip ${selectedSubcategoryId === 'all' ? 'subcategory-chip--active' : ''}`}
+                aria-pressed={selectedSubcategoryId === 'all'}
+                onClick={() => setSelectedSubcategoryId('all')}
               >
-                {subcategory.title}
+                همه
               </button>
-            ))}
-          </nav>
+              {subcategories.map((subcategory) => (
+                <button
+                  key={subcategory.id}
+                  type="button"
+                  className={`subcategory-chip ${selectedSubcategoryId === subcategory.id ? 'subcategory-chip--active' : ''}`}
+                  aria-pressed={selectedSubcategoryId === subcategory.id}
+                  onClick={() => setSelectedSubcategoryId(subcategory.id)}
+                >
+                  {subcategory.title}
+                </button>
+              ))}
+            </nav>
+            <button
+              type="button"
+              className="subcategory-scroll-arrow"
+              aria-label="پیمایش به گزینه‌های سمت راست"
+              aria-controls={subcategoryTrackId}
+              disabled={!scrollEdges.canScrollRight}
+              onClick={() => scrollSubcategories(1)}
+            >
+              <ChevronRight size={22} aria-hidden="true" />
+            </button>
+          </div>
 
           {visibleProducts.length ? (
             <section className="offers-list category-product-list" aria-label={`محصولات ${category.title}`}>

@@ -29,6 +29,9 @@ export const menuProducts = [
   sampleProduct({ id: 'berry-smoothie', categoryId: 'cold-drinks', subcategoryId: 'cold-smoothie', name: 'اسموتی توت‌فرنگی', description: 'اسموتی خنک با طعم توت‌فرنگی.', displayPrice: '۱۳۰٬۰۰۰ تومان' }),
   sampleProduct({ id: 'lemonade', categoryId: 'cold-drinks', subcategoryId: 'cold-lemonade', name: 'لیموناد', description: 'لیموناد خنک و ترش‌وشیرین.', displayPrice: '۹۵٬۰۰۰ تومان' }),
   sampleProduct({ id: 'iced-latte', categoryId: 'cold-drinks', subcategoryId: 'cold-coffee', name: 'آیس لاته', description: 'قهوه و شیر سرد با یخ.', displayPrice: '۱۱۰٬۰۰۰ تومان' }),
+  sampleProduct({ id: 'berry-mocktail', categoryId: 'cold-drinks', subcategoryId: 'cold-mocktail', name: 'موکتل بری', description: 'نوشیدنی میوه‌ای خنک و بدون الکل.', displayPrice: '۱۲۵٬۰۰۰ تومان' }),
+  sampleProduct({ id: 'energy-drink', categoryId: 'cold-drinks', subcategoryId: 'cold-energy', name: 'نوشیدنی انرژی‌زا', description: 'یک نوشیدنی خنک انرژی‌زا.', displayPrice: '۱۰۰٬۰۰۰ تومان' }),
+  sampleProduct({ id: 'daily-cold-special', categoryId: 'cold-drinks', subcategoryId: 'cold-daily-special', name: 'نوشیدنی ویژه‌ی روز', description: 'پیشنهاد آزمایشی روز برای نوشیدنی سرد.', displayPrice: '۱۳۰٬۰۰۰ تومان' }),
 
   sampleProduct({ id: 'chocolate-cookie', categoryId: 'desserts', subcategoryId: 'dessert-cookies', name: 'کوکی شکلاتی', description: 'کوکی تازه با تکه‌های شکلات.', displayPrice: '۶۵٬۰۰۰ تومان' }),
   sampleProduct({ id: 'classic-cheesecake', categoryId: 'desserts', subcategoryId: 'dessert-cheesecake', name: 'چیزکیک کلاسیک', description: 'چیزکیک لطیف با پایه‌ی بیسکویتی.', displayPrice: '۱۴۵٬۰۰۰ تومان' }),

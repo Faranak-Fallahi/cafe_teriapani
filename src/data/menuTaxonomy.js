@@ -6,10 +6,13 @@ export const menuSubcategories = [
   { id: 'hot-brewed', categoryId: 'hot-drinks', title: 'دم‌آوری', order: 2 },
   { id: 'hot-tea', categoryId: 'hot-drinks', title: 'چای', order: 3 },
 
-  { id: 'cold-juice', categoryId: 'cold-drinks', title: 'آب‌میوه', order: 1 },
-  { id: 'cold-smoothie', categoryId: 'cold-drinks', title: 'اسموتی', order: 2 },
-  { id: 'cold-lemonade', categoryId: 'cold-drinks', title: 'لیموناد', order: 3 },
+  { id: 'cold-lemonade', categoryId: 'cold-drinks', title: 'لیموناد', order: 1 },
+  { id: 'cold-juice', categoryId: 'cold-drinks', title: 'آب‌میوه طبیعی', order: 2 },
+  { id: 'cold-mocktail', categoryId: 'cold-drinks', title: 'موکتل بدون الکل', order: 3 },
   { id: 'cold-coffee', categoryId: 'cold-drinks', title: 'قهوه سرد', order: 4 },
+  { id: 'cold-smoothie', categoryId: 'cold-drinks', title: 'اسموتی و شیک سرد', order: 5 },
+  { id: 'cold-energy', categoryId: 'cold-drinks', title: 'انرژی‌درینک', order: 6 },
+  { id: 'cold-daily-special', categoryId: 'cold-drinks', title: 'مخصوص روز', order: 7 },
 
   { id: 'dessert-cookies', categoryId: 'desserts', title: 'کوکی', order: 1 },
   { id: 'dessert-cheesecake', categoryId: 'desserts', title: 'چیزکیک', order: 2 },
