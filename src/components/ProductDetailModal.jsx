@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, Check, X } from 'lucide-react'
-import { menuProducts } from '../data/menuProducts.js'
 import { productDetails } from '../data/productDetails.js'
+import { useAppData } from '../hooks/useAppData.js'
 
 function ProductImage({ product }) {
   const image = product.image ?? product.imagePath ?? ''
@@ -14,12 +14,19 @@ function ProductImage({ product }) {
 }
 
 export function ProductDetailModal({ product, onClose, onSelectProduct, onOrder }) {
+  const { products } = useAppData()
   const closeButtonRef = useRef(null)
   const sheetRef = useRef(null)
   const [orderFeedback, setOrderFeedback] = useState({ productId: null, message: '' })
   const reduceMotion = useReducedMotion()
-  const details = productDetails[product.id] ?? {}
-  const pairedProduct = menuProducts.find((item) => item.id === details.pairingProductId)
+  const sampleDetails = product.isSample ? productDetails[product.id] ?? {} : {}
+  const details = {
+    ingredients: product.ingredients || sampleDetails.ingredients,
+    allergens: product.allergens || sampleDetails.allergens,
+    mascotMessage: product.mascotMessage || sampleDetails.mascotMessage,
+    pairingProductId: product.pairingProductId || sampleDetails.pairingProductId,
+  }
+  const pairedProduct = products.find((item) => item.id === details.pairingProductId)
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow

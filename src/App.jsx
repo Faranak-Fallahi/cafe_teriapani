@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { motion, useReducedMotion } from 'framer-motion'
 import { CategoriesScreen } from './components/CategoriesScreen.jsx'
 import { WelcomeScreen } from './components/WelcomeScreen.jsx'
+import { AppDataProvider } from './context/AppDataContext.jsx'
 
 function getAnchorPosition(frame, anchor) {
   const frameRect = frame.getBoundingClientRect()
@@ -15,7 +16,7 @@ function getAnchorPosition(frame, anchor) {
   }
 }
 
-function App() {
+function AppContent() {
   const [screen, setScreen] = useState('welcome')
   const [mascotBounds, setMascotBounds] = useState(null)
   const frameRef = useRef(null)
@@ -120,4 +121,6 @@ function App() {
   )
 }
 
-export default App
+export default function App() {
+  return <AppDataProvider><AppContent /></AppDataProvider>
+}

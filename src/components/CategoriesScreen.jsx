@@ -1,17 +1,22 @@
 import { useCallback, useState } from 'react'
 import { ArrowRight, BookOpen, Coffee } from 'lucide-react'
-import { menuCategories } from '../data/menuData.js'
+import { useAppData } from '../hooks/useAppData.js'
 import { CategoryCard } from './CategoryCard.jsx'
 import { CategoryProductsScreen } from './CategoryProductsScreen.jsx'
 import { OurStoryView } from './OurStoryView.jsx'
+import { AdminLoginModal } from './AdminLoginModal.jsx'
+import { AdminPanel } from './AdminPanel.jsx'
 import { Toast } from './Toast.jsx'
 
 export function CategoriesScreen({ onBack, mascotAnchorRef }) {
   const [toastMessage, setToastMessage] = useState('')
   const [activeCategory, setActiveCategory] = useState(null)
   const [isStoryOpen, setIsStoryOpen] = useState(false)
+  const [isLoginOpen, setIsLoginOpen] = useState(false)
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false)
   const dismissToast = useCallback(() => setToastMessage(''), [])
-  const visibleCategories = menuCategories
+  const { categories, isAdmin, loadError } = useAppData()
+  const visibleCategories = categories
     .filter((category) => category.isActive !== false)
     .sort((left, right) => left.order - right.order)
 
@@ -23,6 +28,10 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
     }
     setToastMessage('')
     setActiveCategory(category.id)
+  }
+
+  if (isAdminPanelOpen && isAdmin) {
+    return <AdminPanel onClose={() => setIsAdminPanelOpen(false)} />
   }
 
   if (isStoryOpen) {
@@ -82,7 +91,14 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
         </section>
       </div>
 
+      {loadError && <p className="menu-data-notice" role="status">{loadError}</p>}
+      <div className="admin-entry-footer">
+        <button type="button" className="admin-entry-link" onClick={() => (isAdmin ? setIsAdminPanelOpen(true) : setIsLoginOpen(true))}>
+          {isAdmin ? 'پنل مدیریت' : 'ورود مدیر'}
+        </button>
+      </div>
       <Toast message={toastMessage} onDismiss={dismissToast} />
+      {isLoginOpen && <AdminLoginModal onClose={() => setIsLoginOpen(false)} onSuccess={() => { setIsLoginOpen(false); setIsAdminPanelOpen(true) }} />}
     </div>
   )
 }

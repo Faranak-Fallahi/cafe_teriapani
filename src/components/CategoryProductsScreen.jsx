@@ -1,10 +1,11 @@
 import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Coffee, Star } from 'lucide-react'
-import { menuCategories } from '../data/menuData.js'
-import { menuProducts } from '../data/menuProducts.js'
+import { useAppData } from '../hooks/useAppData.js'
 import { menuSubcategories } from '../data/menuTaxonomy.js'
 import { ProductDetailModal } from './ProductDetailModal.jsx'
+import { QuickProductEditor } from './QuickProductEditor.jsx'
+import { Toast } from './Toast.jsx'
 
 function ProductImage({ product, className = '' }) {
   const image = product.image ?? product.imagePath ?? ''
@@ -16,17 +17,21 @@ function ProductImage({ product, className = '' }) {
 }
 
 export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) {
+  const { categories, products, isAdmin, saveCategory, saveProduct } = useAppData()
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [editingProduct, setEditingProduct] = useState(null)
+  const [categoryCopyDraft, setCategoryCopyDraft] = useState(null)
+  const [toastMessage, setToastMessage] = useState('')
   const closeProductDetails = useCallback(() => setSelectedProduct(null), [])
   const subcategoryTrackRef = useRef(null)
   const subcategoryTrackId = `subcategory-track-${useId().replace(/:/g, '')}`
   const [scrollEdges, setScrollEdges] = useState({ canScrollLeft: false, canScrollRight: false })
-  const category = menuCategories.find((item) => item.id === categoryId)
+  const category = categories.find((item) => item.id === categoryId)
   const subcategories = menuSubcategories
     .filter((item) => item.categoryId === categoryId && item.isActive !== false)
     .sort((left, right) => left.order - right.order)
-  const categoryProducts = menuProducts.filter((product) => product.categoryId === categoryId)
+  const categoryProducts = products.filter((product) => product.isAvailable !== false && (product.categoryIds?.includes(categoryId) || product.categoryId === categoryId))
   const visibleProducts = selectedSubcategoryId === 'all'
     ? categoryProducts
     : categoryProducts.filter((product) => product.subcategoryId === selectedSubcategoryId)
@@ -66,6 +71,22 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
     subcategoryTrackRef.current?.scrollBy({ left: direction * 200, behavior: 'smooth' })
   }
 
+  const saveCategoryCopy = async (event) => {
+    event.preventDefault()
+    try {
+      await saveCategory({ ...category, ...categoryCopyDraft })
+      setCategoryCopyDraft(null)
+      setToastMessage('ذخیره شد ✓')
+    } catch (saveError) {
+      setToastMessage(saveError.message || 'ذخیره انجام نشد.')
+    }
+  }
+
+  const saveQuickProduct = async (product) => {
+    await saveProduct(product)
+    setToastMessage('ذخیره شد ✓')
+  }
+
   if (!category) {
     return (
       <section className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 bg-background p-6 text-center" role="status">
@@ -94,7 +115,20 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
           </button>
         </div>
         <aside className="header-mascot" aria-label="راهنمای منوی تریاپانی">
-          <div className="header-speech">{category.mascotMessage}</div>
+          {isAdmin && categoryCopyDraft ? (
+            <form className="mascot-copy-editor" onSubmit={saveCategoryCopy}>
+              <input aria-label="تیتر نمایشی دسته" required value={categoryCopyDraft.funTitle || ''} onChange={(event) => setCategoryCopyDraft({ ...categoryCopyDraft, funTitle: event.target.value })} />
+              <textarea aria-label="پیام مسکات دسته" rows="2" value={categoryCopyDraft.mascotMessage || ''} onChange={(event) => setCategoryCopyDraft({ ...categoryCopyDraft, mascotMessage: event.target.value })} />
+              <button type="submit" aria-label="ذخیره‌ی تیتر و پیام دسته">💾</button>
+              <button type="button" aria-label="لغو ویرایش متن مسکات" onClick={() => setCategoryCopyDraft(null)}>×</button>
+            </form>
+          ) : isAdmin ? (
+            <button type="button" className="header-speech header-speech--editable" onClick={() => setCategoryCopyDraft({ funTitle: category.funTitle || category.title, mascotMessage: category.mascotMessage || '' })} aria-label="ویرایش تیتر و پیام مسکات">
+              {category.mascotMessage || 'برای ویرایش پیام کلیک کنید'} <span aria-hidden="true">✏️</span>
+            </button>
+          ) : (
+            <div className="header-speech">{category.mascotMessage}</div>
+          )}
           <div ref={mascotAnchorRef} className="header-mascot-anchor h-14 w-14" aria-hidden="true" />
         </aside>
       </header>
@@ -152,18 +186,21 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
           {visibleProducts.length ? (
             <section className="offers-list category-product-list" aria-label={`محصولات ${category.title}`}>
               {visibleProducts.map((product) => (
-                <button key={product.id} type="button" className="offer-card" onClick={() => setSelectedProduct(product)} aria-label={`مشاهده جزئیات ${product.name}`}>
-                  <div className="offer-card-media">
-                    <ProductImage product={product} />
-                    {product.badge && <span className="offer-badge offer-badge--overlay"><Star size={15} fill="currentColor" aria-hidden="true" />{product.badge}</span>}
-                  </div>
-                  <span className="offer-card-copy">
-                    <strong className="offer-name">{product.name}</strong>
-                    <span className="offer-description">{product.description}</span>
-                    <span className="offer-price">{product.displayPrice}</span>
-                    <span className="offer-action"><span>مشاهده جزئیات</span><span className="offer-action-icon"><ArrowLeft size={20} aria-hidden="true" /></span></span>
-                  </span>
-                </button>
+                <article key={product.id} className="offer-card">
+                  <button type="button" className="offer-card-main" onClick={() => setSelectedProduct(product)} aria-label={`مشاهده جزئیات ${product.name}`}>
+                    <div className="offer-card-media">
+                      <ProductImage product={product} />
+                      {product.badge && <span className="offer-badge offer-badge--overlay"><Star size={15} fill="currentColor" aria-hidden="true" />{product.badge}</span>}
+                    </div>
+                    <span className="offer-card-copy">
+                      <strong className="offer-name">{product.name}</strong>
+                      <span className="offer-description">{product.description}</span>
+                      <span className="offer-price">{product.displayPrice}</span>
+                      <span className="offer-action"><span>مشاهده جزئیات</span><span className="offer-action-icon"><ArrowLeft size={20} aria-hidden="true" /></span></span>
+                    </span>
+                  </button>
+                  {isAdmin && <button type="button" className="product-edit-quick" onClick={() => setEditingProduct(product)} aria-label={`ویرایش سریع ${product.name}`}>✏️</button>}
+                </article>
               ))}
             </section>
           ) : (
@@ -184,6 +221,8 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
           />
         )}
       </AnimatePresence>
+      {editingProduct && <QuickProductEditor product={editingProduct} onSave={saveQuickProduct} onClose={() => setEditingProduct(null)} />}
+      <Toast message={toastMessage} onDismiss={() => setToastMessage('')} />
     </div>
   )
 }
