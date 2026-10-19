@@ -1,13 +1,15 @@
 import { useCallback, useState } from 'react'
-import { ArrowRight, Coffee } from 'lucide-react'
+import { ArrowRight, BookOpen, Coffee } from 'lucide-react'
 import { menuCategories } from '../data/menuData.js'
 import { CategoryCard } from './CategoryCard.jsx'
 import { CategoryProductsScreen } from './CategoryProductsScreen.jsx'
+import { OurStoryView } from './OurStoryView.jsx'
 import { Toast } from './Toast.jsx'
 
 export function CategoriesScreen({ onBack, mascotAnchorRef }) {
   const [toastMessage, setToastMessage] = useState('')
   const [activeCategory, setActiveCategory] = useState(null)
+  const [isStoryOpen, setIsStoryOpen] = useState(false)
   const dismissToast = useCallback(() => setToastMessage(''), [])
   const visibleCategories = menuCategories
     .filter((category) => category.isActive !== false)
@@ -21,6 +23,10 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
     }
     setToastMessage('')
     setActiveCategory(category.id)
+  }
+
+  if (isStoryOpen) {
+    return <OurStoryView onBack={() => setIsStoryOpen(false)} mascotAnchorRef={mascotAnchorRef} />
   }
 
   if (activeCategory) {
@@ -66,6 +72,13 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
               onSelect={openCategory}
             />
           ))}
+          <button type="button" className="category-card category-card--wide story-category-card" onClick={() => setIsStoryOpen(true)} aria-label="باز کردن قصه‌ی تریاپانی">
+            <span className="category-sticker story-category-sticker" aria-hidden="true"><BookOpen size={30} strokeWidth={2.2} /></span>
+            <span className="category-card-copy">
+              <span className="category-title">خاطره‌بازی 🕰️</span>
+              <span className="story-category-subtitle">قصه‌ی تریاپانی</span>
+            </span>
+          </button>
         </section>
       </div>
 
