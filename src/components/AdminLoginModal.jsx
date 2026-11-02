@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { LockKeyhole, X } from 'lucide-react'
-import { isSupabaseConfigured } from '../supabaseClient.js'
 import { useAppData } from '../hooks/useAppData.js'
 
 export function AdminLoginModal({ onClose, onSuccess }) {
@@ -27,11 +26,6 @@ export function AdminLoginModal({ onClose, onSuccess }) {
         <span className="admin-modal-icon"><LockKeyhole size={24} aria-hidden="true" /></span>
         <h2 id="admin-login-title">ورود مدیر تریاپانی</h2>
         <p>با حساب مدیر کافه وارد شوید.</p>
-        {!isSupabaseConfigured && (
-          <div className="admin-setup-hint" role="status">
-            اتصال Supabase هنوز تنظیم نشده است. مقادیر URL و anon key را در فایل محیطی قرار دهید.
-          </div>
-        )}
         <form onSubmit={submit} className="admin-form">
           <label>ایمیل مدیر
             <input type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@example.com" />
@@ -40,7 +34,7 @@ export function AdminLoginModal({ onClose, onSuccess }) {
             <input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} />
           </label>
           {error && <p className="admin-form-error" role="alert">{error}</p>}
-          <button type="submit" className="admin-primary-button" disabled={adminLoading || !isSupabaseConfigured}>
+          <button type="submit" className="admin-primary-button" disabled={adminLoading}>
             {adminLoading ? 'در حال ورود…' : 'ورود به پنل'}
           </button>
         </form>

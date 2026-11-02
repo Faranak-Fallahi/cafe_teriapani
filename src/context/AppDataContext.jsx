@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { menuCategories as mockCategories } from '../data/menuData.js'
 import { menuProducts as mockProducts } from '../data/menuProducts.js'
-import { isSupabaseConfigured, supabase } from '../supabaseClient.js'
+import { specialOffers as mockOffers } from '../data/specialOffers.js'
+import { storyChapters as mockStory } from '../data/storyChapters.js'
 import { AppDataContext } from './appDataContext.js'
+import { getFileUrl, pb } from '../lib/pocketbase.js'
 
 function formatPrice(price) {
   return `${new Intl.NumberFormat('fa-IR').format(Number(price) || 0)} تومان`
@@ -10,7 +12,8 @@ function formatPrice(price) {
 
 function categoryFromRow(row) {
   return {
-    id: row.id,
+    id: row.slug,
+    recordId: row.id,
     title: row.name,
     funTitle: row.fun_title || row.name,
     mascotMessage: row.mascot_message || '',
@@ -26,236 +29,253 @@ function categoryFromRow(row) {
 }
 
 function productFromRow(row) {
-  const categoryIds = (row.product_categories ?? []).map((relation) => relation.category_id)
+  const categoryIds = (row.expand?.categories ?? []).map((category) => category.slug)
   return {
-    id: row.id,
+    id: row.slug,
+    recordId: row.id,
     name: row.name,
     displayPrice: formatPrice(row.price),
     price: Number(row.price) || 0,
     description: row.description || '',
     ingredients: row.ingredients || '',
     allergens: row.allergens || '',
-    image: row.image_url || '',
-    imagePath: row.image_url || '',
+    image: row.image ? getFileUrl(row, row.image) : '',
+    imagePath: row.image ? getFileUrl(row, row.image) : '',
     categoryIds,
     categoryId: categoryIds[0] ?? '',
     subcategoryId: row.subcategory_id || null,
     isAvailable: row.is_available !== false,
     mascotMessage: row.mascot_message || '',
-    pairingProductId: row.pairing_product_id || '',
+    pairingProductId: row.pairing_product_slug || '',
     badge: row.badge || '',
     isSample: false,
   }
 }
 
-function ensureConfigured() {
-  if (!supabase) throw new Error('ابتدا نشانی Supabase و کلید anon را در فایل محیطی تنظیم کنید.')
+function offerFromRow(row) {
+  const price = Number(row.price) || 0
+  return {
+    id: row.slug,
+    recordId: row.id,
+    name: row.name,
+    description: row.description || '',
+    price,
+    displayPrice: formatPrice(price),
+    badge: row.badge || '',
+    image: row.image ? getFileUrl(row, row.image) : '',
+    imagePath: row.image ? getFileUrl(row, row.image) : '',
+    moods: Array.isArray(row.moods) ? row.moods : [],
+  }
+}
+
+function storyFromRow(row) {
+  return {
+    id: row.slug,
+    recordId: row.id,
+    chapter: row.chapter || '',
+    title: row.title,
+    description: row.description || '',
+    photoLabel: row.photo_label || '',
+    image: row.photo ? getFileUrl(row, row.photo) : '',
+  }
 }
 
 export function AppDataProvider({ children }) {
-  const [categories, setCategories] = useState(mockCategories)
-  const [products, setProducts] = useState(mockProducts)
-  const [dataSource, setDataSource] = useState(isSupabaseConfigured ? 'loading' : 'mock')
-  const [session, setSession] = useState(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [menu, setMenu] = useState(() => ({
+    categories: [],
+    products: [],
+    dataSource: 'loading',
+    isMenuLoading: true,
+    loadError: '',
+    offers: mockOffers,
+    story: mockStory,
+  }))
+  const { categories, products, offers, story, dataSource, isMenuLoading, loadError } = menu
+  const mountedRef = useRef(false)
+  const requestIdRef = useRef(0)
+  const [session, setSession] = useState(pb.authStore.record)
+  const [isAdmin, setIsAdmin] = useState(pb.authStore.record?.role === 'admin' && pb.authStore.isValid)
   const [adminLoading, setAdminLoading] = useState(false)
-  const [loadError, setLoadError] = useState('')
 
   const refreshMenu = useCallback(async () => {
-    if (!supabase) return false
+    if (!mountedRef.current) return false
+    const requestId = ++requestIdRef.current
+    setMenu((previous) => ({ ...previous, isMenuLoading: true, loadError: '' }))
     try {
-      const [categoryResult, productResult] = await Promise.all([
-        supabase.from('categories').select('*').order('sort_order'),
-        supabase.from('products').select('*, product_categories(category_id)').order('name'),
+      const authenticatedAsAdmin = pb.authStore.isValid && pb.authStore.record?.role === 'admin'
+      const [categoryRows, productRows, offerRows, storyRows] = await Promise.all([
+        pb.collection('categories').getFullList({
+          sort: 'sort_order',
+          ...(authenticatedAsAdmin ? {} : { filter: 'is_active = true' }),
+        }),
+        pb.collection('products').getFullList({
+          sort: 'name',
+          expand: 'categories',
+          ...(authenticatedAsAdmin ? {} : { filter: 'is_available = true' }),
+        }),
+        pb.collection('special_offers').getFullList({ filter: 'is_active = true', sort: 'name' }),
+        pb.collection('our_story').getFullList({ sort: 'sort_order' }),
       ])
-      const error = categoryResult.error || productResult.error
-      if (error) throw error
-
-      setCategories(categoryResult.data.map(categoryFromRow))
-      setProducts(productResult.data.map(productFromRow))
-      setDataSource('supabase')
-      setLoadError('')
+      if (!mountedRef.current || requestId !== requestIdRef.current) return false
+      // Publish both lists together; never mix live categories with mock products.
+      setMenu({
+        categories: categoryRows.map(categoryFromRow),
+        products: productRows.map(productFromRow),
+        offers: offerRows.map(offerFromRow),
+        story: storyRows.map(storyFromRow),
+        dataSource: 'pocketbase',
+        isMenuLoading: false,
+        loadError: '',
+      })
       return true
     } catch {
-      setCategories(mockCategories)
-      setProducts(mockProducts)
-      setLoadError('اتصال به منو برقرار نشد؛ اطلاعات نمونه نمایش داده می‌شود.')
-      setDataSource('mock')
+      if (!mountedRef.current || requestId !== requestIdRef.current) return false
+      setMenu((previous) => previous.dataSource === 'pocketbase'
+        ? {
+            ...previous,
+            isMenuLoading: false,
+            loadError: 'به‌روزرسانی منو ناموفق بود؛ آخرین اطلاعات دریافت‌شده نمایش داده می‌شود.',
+          }
+        : {
+            categories: mockCategories,
+            products: mockProducts,
+            offers: mockOffers,
+            story: mockStory,
+            dataSource: 'mock',
+            isMenuLoading: false,
+            loadError: 'اتصال به منوی آنلاین برقرار نشد؛ منوی نمونه و موقت نمایش داده می‌شود.',
+          })
       return false
     }
   }, [])
 
   useEffect(() => {
-    if (!supabase) return undefined
-    let isCurrent = true
-
-    const load = async () => {
-      setDataSource('loading')
-      const [sessionResult, categoryResult, productResult] = await Promise.all([
-        supabase.auth.getSession(),
-        supabase.from('categories').select('*').order('sort_order'),
-        supabase.from('products').select('*, product_categories(category_id)').order('name'),
-      ])
-      if (!isCurrent) return
-
-      if (sessionResult.data?.session) setSession(sessionResult.data.session)
-      const error = categoryResult.error || productResult.error
-      if (error) {
-        setCategories(mockCategories)
-        setProducts(mockProducts)
-        setLoadError('اتصال به منو برقرار نشد؛ اطلاعات نمونه نمایش داده می‌شود.')
-        setDataSource('mock')
-      } else {
-        setCategories(categoryResult.data.map(categoryFromRow))
-        setProducts(productResult.data.map(productFromRow))
-        setDataSource('supabase')
-      }
-    }
-
-    load().catch(() => {
-      if (!isCurrent) return
-      setCategories(mockCategories)
-      setProducts(mockProducts)
-      setLoadError('اتصال به منو برقرار نشد؛ اطلاعات نمونه نمایش داده می‌شود.')
-      setDataSource('mock')
-    })
-    const { data: authData } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession)
-      setIsAdmin(false)
-    })
-
+    mountedRef.current = true
+    const initialLoad = window.setTimeout(() => void refreshMenu(), 0)
     return () => {
-      isCurrent = false
-      authData.subscription.unsubscribe()
+      window.clearTimeout(initialLoad)
+      mountedRef.current = false
+      requestIdRef.current += 1
     }
-  }, [])
+  }, [refreshMenu])
 
-  useEffect(() => {
-    if (!supabase || !session?.user?.id) return undefined
-
-    let isCurrent = true
-    supabase.from('user_roles').select('role').eq('user_id', session.user.id).eq('role', 'admin').maybeSingle()
-      .then(({ data, error }) => {
-        if (isCurrent) setIsAdmin(!error && Boolean(data))
-      })
-      .catch(() => { if (isCurrent) setIsAdmin(false) })
-
-    return () => { isCurrent = false }
-  }, [session?.user?.id])
+  useEffect(() => pb.authStore.onChange((_token, record) => {
+    setSession(record)
+    setIsAdmin(pb.authStore.isValid && record?.role === 'admin')
+    if (mountedRef.current) void refreshMenu()
+  }, true), [refreshMenu])
 
   const signIn = useCallback(async (email, password) => {
-    ensureConfigured()
     setAdminLoading(true)
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-      if (error) throw error
-      const { data: role, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id)
-        .eq('role', 'admin')
-        .maybeSingle()
-      if (roleError || !role) {
-        await supabase.auth.signOut()
+      const auth = await pb.collection('users').authWithPassword(email.trim(), password)
+      if (auth.record?.role !== 'admin') {
+        pb.authStore.clear()
         throw new Error('این حساب دسترسی مدیر ندارد.')
       }
-      setSession(data.session)
+      setSession(auth.record)
       setIsAdmin(true)
+      await refreshMenu()
     } finally {
       setAdminLoading(false)
     }
-  }, [])
+  }, [refreshMenu])
 
   const signOut = useCallback(async () => {
-    ensureConfigured()
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    pb.authStore.clear()
     setSession(null)
     setIsAdmin(false)
-  }, [])
+    await refreshMenu()
+  }, [refreshMenu])
 
   const saveCategory = useCallback(async (category) => {
-    ensureConfigured()
+    const slug = category.id || `category-${crypto.randomUUID()}`
     const row = {
-      id: category.id || crypto.randomUUID(),
+      slug,
       name: category.title,
       fun_title: category.funTitle || category.title,
       mascot_message: category.mascotMessage || '',
       icon: category.sticker || '☕',
       tone: category.tone || 'cream',
-      sticker_tone: category.stickerTone || null,
+      sticker_tone: category.stickerTone || '',
       is_featured: Boolean(category.featured),
       is_wide: Boolean(category.wide),
-      badge: category.badge || null,
+      badge: category.badge || '',
       sort_order: Number(category.order) || 0,
       is_active: category.isActive !== false,
     }
-    const { error } = await supabase.from('categories').upsert(row)
-    if (error) throw error
+    if (category.recordId) await pb.collection('categories').update(category.recordId, row)
+    else {
+      try {
+        const existing = await pb.collection('categories').getFirstListItem(`slug = "${slug}"`)
+        await pb.collection('categories').update(existing.id, row)
+      } catch (error) {
+        if (error.status !== 404) throw error
+        await pb.collection('categories').create(row)
+      }
+    }
     await refreshMenu()
   }, [refreshMenu])
 
   const deleteCategory = useCallback(async (categoryId) => {
-    ensureConfigured()
-    const { error } = await supabase.from('categories').delete().eq('id', categoryId)
-    if (error) throw error
+    const category = await pb.collection('categories').getFirstListItem(`slug = "${categoryId}"`)
+    await pb.collection('categories').delete(category.id)
     await refreshMenu()
   }, [refreshMenu])
 
   const saveProduct = useCallback(async (product) => {
-    ensureConfigured()
-    const productId = product.id || crypto.randomUUID()
-    const categoryIds = product.categoryIds ?? (product.categoryId ? [product.categoryId] : [])
+    const slug = product.id || `product-${crypto.randomUUID()}`
+    const categorySlugs = product.categoryIds ?? (product.categoryId ? [product.categoryId] : [])
+    const categoryRows = await pb.collection('categories').getFullList({ fields: 'id,slug' })
+    const categoryRecords = new Map(categoryRows.map((item) => [item.slug, item.id]))
     const row = {
-      id: productId,
+      slug,
       name: product.name.trim(),
       price: Number(product.price) || 0,
       description: product.description || '',
       ingredients: product.ingredients || '',
       allergens: product.allergens || '',
-      image_url: product.image || null,
       is_available: product.isAvailable !== false,
       mascot_message: product.mascotMessage || '',
-      pairing_product_id: product.pairingProductId || null,
-      subcategory_id: product.subcategoryId || null,
-      badge: product.badge || null,
+      pairing_product_slug: product.pairingProductId || '',
+      subcategory_id: product.subcategoryId || '',
+      badge: product.badge || '',
+      categories: [...new Set(categorySlugs)].map((categorySlug) => categoryRecords.get(categorySlug)).filter(Boolean),
     }
-    const { error } = await supabase.from('products').upsert(row)
-    if (error) throw error
+    let record = product.recordId ? { id: product.recordId } : null
+    if (!record) {
+      try { record = await pb.collection('products').getFirstListItem(`slug = "${slug}"`) }
+      catch (error) { if (error.status !== 404) throw error }
+    }
 
-    const { error: removeRelationsError } = await supabase.from('product_categories').delete().eq('product_id', productId)
-    if (removeRelationsError) throw removeRelationsError
-    if (categoryIds.length) {
-      const { error: relationError } = await supabase.from('product_categories').insert(
-        [...new Set(categoryIds)].map((categoryId) => ({ product_id: productId, category_id: categoryId })),
-      )
-      if (relationError) throw relationError
+    let data = row
+    if (product.imageFile) {
+      data = new FormData()
+      for (const [key, value] of Object.entries(row)) {
+        if (key === 'categories') value.forEach((id) => data.append('categories', id))
+        else data.append(key, String(value))
+      }
+      data.append('image', product.imageFile)
     }
+    if (record) await pb.collection('products').update(record.id, data)
+    else await pb.collection('products').create(data)
     await refreshMenu()
   }, [refreshMenu])
 
   const deleteProduct = useCallback(async (productId) => {
-    ensureConfigured()
-    const { error } = await supabase.from('products').delete().eq('id', productId)
-    if (error) throw error
+    const product = await pb.collection('products').getFirstListItem(`slug = "${productId}"`)
+    await pb.collection('products').delete(product.id)
     await refreshMenu()
   }, [refreshMenu])
-
-  const uploadProductImage = useCallback(async (file) => {
-    ensureConfigured()
-    const safeName = file.name.replace(/[^\w.-]+/g, '-')
-    const path = `${crypto.randomUUID()}-${safeName}`
-    const { error } = await supabase.storage.from('product-images').upload(path, file, { upsert: false, contentType: file.type })
-    if (error) throw error
-    const { data } = supabase.storage.from('product-images').getPublicUrl(path)
-    return data.publicUrl
-  }, [])
 
   const value = useMemo(() => ({
     categories,
     products,
+    offers,
+    story,
     dataSource,
     loadError,
+    isMenuLoading,
     session,
     isAdmin,
     adminLoading,
@@ -266,8 +286,7 @@ export function AppDataProvider({ children }) {
     deleteCategory,
     saveProduct,
     deleteProduct,
-    uploadProductImage,
-  }), [categories, products, dataSource, loadError, session, isAdmin, adminLoading, signIn, signOut, refreshMenu, saveCategory, deleteCategory, saveProduct, deleteProduct, uploadProductImage])
+  }), [categories, products, offers, story, dataSource, loadError, isMenuLoading, session, isAdmin, adminLoading, signIn, signOut, refreshMenu, saveCategory, deleteCategory, saveProduct, deleteProduct])
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
 }

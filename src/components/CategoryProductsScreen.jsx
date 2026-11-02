@@ -1,22 +1,15 @@
 import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Coffee, Star } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Coffee, Star } from 'lucide-react'
 import { useAppData } from '../hooks/useAppData.js'
 import { menuSubcategories } from '../data/menuTaxonomy.js'
 import { ProductDetailModal } from './ProductDetailModal.jsx'
 import { QuickProductEditor } from './QuickProductEditor.jsx'
 import { Toast } from './Toast.jsx'
+import { ProductImage } from './ProductImage.jsx'
+import { BackButton } from './BackButton.jsx'
 
-function ProductImage({ product, className = '' }) {
-  const image = product.image ?? product.imagePath ?? ''
-  return image ? (
-    <img className={`offer-image ${className}`} src={image} alt={product.name} />
-  ) : (
-    <div className={`offer-image offer-image--empty ${className}`} aria-label="جای تصویر محصول" />
-  )
-}
-
-export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) {
+export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef, mascotInteractionProps }) {
   const { categories, products, isAdmin, saveCategory, saveProduct } = useAppData()
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -105,14 +98,7 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
             <p className="text-[11px] font-medium leading-tight text-dark/60">منوی کافه</p>
             <h1 className="category-brand-title category-fun-title font-extrabold leading-tight text-dark">{category.funTitle}</h1>
           </div>
-          <button
-            type="button"
-            onClick={selectedProduct ? closeProductDetails : onBack}
-            className="back-button inline-flex h-10 w-10 items-center justify-center rounded-full text-dark transition hover:bg-secondary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            aria-label={selectedProduct ? 'بازگشت به فهرست محصولات' : 'بازگشت به دسته‌بندی‌ها'}
-          >
-            <ArrowRight size={21} aria-hidden="true" />
-          </button>
+          <BackButton onClick={selectedProduct ? closeProductDetails : onBack} label={selectedProduct ? 'بازگشت به فهرست محصولات' : 'بازگشت به دسته‌بندی‌ها'} />
         </div>
         <aside className="header-mascot" aria-label="راهنمای منوی تریاپانی">
           {isAdmin && categoryCopyDraft ? (
@@ -129,7 +115,7 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
           ) : (
             <div className="header-speech">{category.mascotMessage}</div>
           )}
-          <div ref={mascotAnchorRef} className="header-mascot-anchor h-14 w-14" aria-hidden="true" />
+          <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps} />
         </aside>
       </header>
 
@@ -186,10 +172,10 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef }) 
           {visibleProducts.length ? (
             <section className="offers-list category-product-list" aria-label={`محصولات ${category.title}`}>
               {visibleProducts.map((product) => (
-                <article key={product.id} className="offer-card">
+                <article key={product.id} className="offer-card offer-card--container">
                   <button type="button" className="offer-card-main" onClick={() => setSelectedProduct(product)} aria-label={`مشاهده جزئیات ${product.name}`}>
                     <div className="offer-card-media">
-                      <ProductImage product={product} />
+                      <ProductImage product={product} variant="card" />
                       {product.badge && <span className="offer-badge offer-badge--overlay"><Star size={15} fill="currentColor" aria-hidden="true" />{product.badge}</span>}
                     </div>
                     <span className="offer-card-copy">

@@ -1,17 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowLeft, Check, X } from 'lucide-react'
+import { ArrowLeft, Check } from 'lucide-react'
 import { productDetails } from '../data/productDetails.js'
 import { useAppData } from '../hooks/useAppData.js'
-
-function ProductImage({ product }) {
-  const image = product.image ?? product.imagePath ?? ''
-  return image ? (
-    <img className="product-detail-photo" src={image} alt={product.name} />
-  ) : (
-    <div className="product-detail-photo product-detail-photo--empty" role="img" aria-label={`جای تصویر ${product.name}`} />
-  )
-}
+import { ProductImage } from './ProductImage.jsx'
+import { BackButton } from './BackButton.jsx'
 
 export function ProductDetailModal({ product, onClose, onSelectProduct, onOrder }) {
   const { products } = useAppData()
@@ -90,13 +83,11 @@ export function ProductDetailModal({ product, onClose, onSelectProduct, onOrder 
         >
           <div className="product-sheet-topbar">
             <span className="product-sheet-handle" aria-hidden="true" />
-            <button ref={closeButtonRef} type="button" className="product-detail-close" onClick={onClose} aria-label="بستن جزئیات محصول">
-              <X size={25} aria-hidden="true" />
-            </button>
+            <BackButton ref={closeButtonRef} variant="close" onClick={onClose} label="بستن جزئیات محصول" className="product-detail-close" />
           </div>
 
           <div className="product-detail-scroll">
-            <ProductImage product={product} />
+            <ProductImage product={product} variant="detail" />
             <div className="product-detail-heading">
               <h2 id="product-detail-title">{product.name}</h2>
               <p className="product-detail-price">{product.displayPrice}</p>

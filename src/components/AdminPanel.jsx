@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { ArrowRight, ImagePlus, LogOut, Pencil, Plus, Save, Trash2 } from 'lucide-react'
+import { ImagePlus, LogOut, Pencil, Plus, Save, Trash2 } from 'lucide-react'
 import { useAppData } from '../hooks/useAppData.js'
 import { ConfirmDialog } from './ConfirmDialog.jsx'
 import { Toast } from './Toast.jsx'
+import { BackButton } from './BackButton.jsx'
+import { ProductImage } from './ProductImage.jsx'
 
 const emptyCategory = { title: '', funTitle: '', mascotMessage: '', sticker: '☕', order: 1, tone: 'cream', isActive: true }
 const emptyProduct = { name: '', price: '', description: '', ingredients: '', allergens: '', image: '', isAvailable: true, categoryIds: [], mascotMessage: '', pairingProductId: '' }
@@ -10,7 +12,7 @@ const emptyProduct = { name: '', price: '', description: '', ingredients: '', al
 export function AdminPanel({ onClose }) {
   const {
     categories, products, signOut, saveCategory, deleteCategory,
-    saveProduct, deleteProduct, uploadProductImage,
+    saveProduct, deleteProduct,
   } = useAppData()
   const [activeTab, setActiveTab] = useState('categories')
   const [categoryDraft, setCategoryDraft] = useState(null)
@@ -46,8 +48,7 @@ export function AdminPanel({ onClose }) {
     setBusy(true)
     setError('')
     try {
-      const image = imageFile ? await uploadProductImage(imageFile) : productDraft.image
-      await saveProduct({ ...productDraft, price: Number(productDraft.price) || 0, image })
+      await saveProduct({ ...productDraft, price: Number(productDraft.price) || 0, imageFile })
       clearEditor()
       setToastMessage('ذخیره شد ✓')
     } catch (saveError) { showError(saveError) } finally { setBusy(false) }
@@ -76,7 +77,7 @@ export function AdminPanel({ onClose }) {
   return (
     <div className="admin-panel-screen">
       <header className="admin-panel-header">
-        <button type="button" className="admin-icon-button" onClick={onClose} aria-label="بازگشت به منو"><ArrowRight size={21} /></button>
+        <BackButton onClick={onClose} label="بازگشت به منو" />
         <div><p>تریاپانی</p><h1>پنل مدیریت</h1></div>
         <button type="button" className="admin-logout-button" onClick={handleSignOut} disabled={busy}><LogOut size={17} /> خروج</button>
       </header>
@@ -141,7 +142,7 @@ export function AdminPanel({ onClose }) {
             <div className="admin-record-list">
               {filteredProducts.map((product) => (
                 <article className="admin-record" key={product.id}>
-                  <span className="admin-product-thumb" aria-hidden="true">{product.image ? <img src={product.image} alt="" /> : '☕'}</span>
+                  <span className="admin-product-thumb" aria-hidden="true"><ProductImage product={product} variant="thumbnail" alt="" /></span>
                   <div className="admin-record-copy"><strong>{product.name}</strong><span>{product.displayPrice}</span></div>
                   <div className="admin-record-actions">
                     <button type="button" className="admin-icon-button" onClick={() => { setError(''); setImageFile(null); setProductDraft({ ...emptyProduct, ...product, price: product.price ?? '', categoryIds: product.categoryIds ?? (product.categoryId ? [product.categoryId] : []) }) }} aria-label={`ویرایش ${product.name}`}><Pencil size={17} /></button>

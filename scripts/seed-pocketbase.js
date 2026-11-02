@@ -77,7 +77,7 @@ await ensureCollection('users', [
   collectionOptions: { passwordAuth: { enabled: true, identityFields: ['email'] } },
 })
 
-const productsCollection = await ensureCollection('products', [
+await ensureCollection('products', [
   field('text', 'slug', { max: 100 }, true),
   field('text', 'name', { max: 200 }, true),
   field('number', 'price'),
