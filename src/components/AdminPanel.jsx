@@ -12,17 +12,20 @@ const emptyProduct = { name: '', price: '', description: '', ingredients: '', al
 export function AdminPanel({ onClose }) {
   const {
     categories, products, signOut, saveCategory, deleteCategory,
-    saveProduct, deleteProduct,
+    saveProduct, deleteProduct, siteSettings, saveSiteSettings,
   } = useAppData()
   const [activeTab, setActiveTab] = useState('categories')
   const [categoryDraft, setCategoryDraft] = useState(null)
   const [productDraft, setProductDraft] = useState(null)
+  const [settingsEdits, setSettingsEdits] = useState(null)
   const [productFilter, setProductFilter] = useState('all')
   const [imageFile, setImageFile] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [toastMessage, setToastMessage] = useState('')
+
+  const settingsDraft = settingsEdits ?? siteSettings
 
   const showError = (saveError) => setError(saveError.message || 'ذخیره انجام نشد؛ دوباره تلاش کنید.')
   const clearEditor = () => {
@@ -51,6 +54,16 @@ export function AdminPanel({ onClose }) {
       await saveProduct({ ...productDraft, price: Number(productDraft.price) || 0, imageFile })
       clearEditor()
       setToastMessage('ذخیره شد ✓')
+    } catch (saveError) { showError(saveError) } finally { setBusy(false) }
+  }
+
+  const submitSiteSettings = async (event) => {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      await saveSiteSettings(settingsDraft)
+      setToastMessage('متن‌های سایت ذخیره شد ✓')
     } catch (saveError) { showError(saveError) } finally { setBusy(false) }
   }
 
@@ -85,6 +98,7 @@ export function AdminPanel({ onClose }) {
       <nav className="admin-tabs" aria-label="بخش‌های پنل مدیریت">
         <button type="button" aria-pressed={activeTab === 'categories'} className={activeTab === 'categories' ? 'admin-tab admin-tab--active' : 'admin-tab'} onClick={() => { clearEditor(); setActiveTab('categories') }}>دسته‌بندی‌ها</button>
         <button type="button" aria-pressed={activeTab === 'products'} className={activeTab === 'products' ? 'admin-tab admin-tab--active' : 'admin-tab'} onClick={() => { clearEditor(); setActiveTab('products') }}>محصولات</button>
+        <button type="button" aria-pressed={activeTab === 'site-settings'} className={activeTab === 'site-settings' ? 'admin-tab admin-tab--active' : 'admin-tab'} onClick={() => { clearEditor(); setSettingsEdits(siteSettings); setActiveTab('site-settings') }}>متن‌های سایت</button>
       </nav>
 
       <main className="admin-panel-content">
@@ -116,7 +130,7 @@ export function AdminPanel({ onClose }) {
               ))}
             </div>
           </section>
-        ) : (
+        ) : activeTab === 'products' ? (
           <section aria-labelledby="admin-products-title">
             <div className="admin-section-heading"><h2 id="admin-products-title">مدیریت محصولات</h2><button type="button" className="admin-small-button" onClick={() => { setError(''); setImageFile(null); setProductDraft({ ...emptyProduct }) }}><Plus size={17} /> محصول جدید</button></div>
             <label className="admin-filter-label">فیلتر دسته
@@ -153,8 +167,19 @@ export function AdminPanel({ onClose }) {
               {!filteredProducts.length && <p className="admin-empty">محصولی در این فهرست نیست.</p>}
             </div>
           </section>
+        ) : (
+          <section aria-labelledby="admin-site-settings-title">
+            <div className="admin-section-heading"><h2 id="admin-site-settings-title">تنظیمات متن‌های سایت</h2></div>
+            <form className="admin-editor-form" onSubmit={submitSiteSettings}>
+              <label>عنوان خوش‌آمدگویی<textarea required rows="2" maxLength="500" value={settingsDraft.heroTitle} onChange={(event) => setSettingsEdits({ ...settingsDraft, heroTitle: event.target.value })} /></label>
+              <label>متن کنار مسکات و زیرعنوان<textarea required rows="2" maxLength="500" value={settingsDraft.heroSubtitle} onChange={(event) => setSettingsEdits({ ...settingsDraft, heroSubtitle: event.target.value })} /></label>
+              <label>متن اعلان کوتاه<textarea rows="2" maxLength="1000" value={settingsDraft.announcementText} onChange={(event) => setSettingsEdits({ ...settingsDraft, announcementText: event.target.value })} /></label>
+              {error && <p className="admin-form-error" role="alert">{error}</p>}
+              <div className="admin-form-actions"><button type="submit" className="admin-primary-button" disabled={busy}><Save size={17} /> {busy ? 'در حال ذخیره…' : 'ذخیره تغییرات'}</button></div>
+            </form>
+          </section>
         )}
-        {error && !categoryDraft && !productDraft && <p className="admin-form-error" role="alert">{error}</p>}
+        {error && !categoryDraft && !productDraft && activeTab !== 'site-settings' && <p className="admin-form-error" role="alert">{error}</p>}
       </main>
       <Toast message={toastMessage} onDismiss={() => setToastMessage('')} />
       {pendingDelete && <ConfirmDialog message={pendingDelete.type === 'category' ? `دسته‌ی «${pendingDelete.item.title}» و پیوندهای محصولاتش حذف شود؟` : `محصول «${pendingDelete.item.name}» حذف شود؟`} onConfirm={confirmDelete} onCancel={() => setPendingDelete(null)} busy={busy} />}

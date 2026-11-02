@@ -21,7 +21,7 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
   const longPressTimerRef = useRef(null)
   const hideEntryTimerRef = useRef(null)
   const dismissToast = useCallback(() => setToastMessage(''), [])
-  const { categories, isAdmin, loadError, isMenuLoading, refreshMenu } = useAppData()
+  const { categories, isAdmin, loadError, isMenuLoading, refreshMenu, siteSettings } = useAppData()
   const visibleCategories = categories
     .filter((category) => category.isActive !== false)
     .sort((left, right) => left.order - right.order)
@@ -105,7 +105,7 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
             <BackButton onClick={onBack} label="بازگشت به صفحه‌ی خوش‌آمد" />
           </div>
           <aside className="header-mascot" aria-label="راهنمای منوی تریاپانی">
-            <div className="header-speech">چی میل داری؟</div>
+            <div className="header-speech">{siteSettings?.heroSubtitle || 'چی میل داری؟'}</div>
             <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps} />
           </aside>
         </header>

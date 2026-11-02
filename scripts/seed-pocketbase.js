@@ -147,6 +147,13 @@ await ensureCollection('mascot_settings', [
   field('bool', 'is_active'),
 ], { collectionOptions: { indexes: ['CREATE UNIQUE INDEX idx_mascot_settings_slug ON mascot_settings (slug)'] } })
 
+await ensureCollection('site_settings', [
+  field('text', 'slug', { max: 80 }, true),
+  field('text', 'hero_title', { max: 500 }, true),
+  field('text', 'hero_subtitle', { max: 500 }, true),
+  field('text', 'announcement_text', { max: 1000 }),
+], { collectionOptions: { indexes: ['CREATE UNIQUE INDEX idx_site_settings_slug ON site_settings (slug)'] } })
+
 function parsePrice(product) {
   const source = String(product.price ?? product.displayPrice ?? '')
   const westernDigits = source.replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
@@ -227,4 +234,16 @@ await upsertBySlug('mascot_settings', 'default', {
   is_active: true,
 })
 
-console.log(`PocketBase schema ready. Seeded ${menuCategories.length} categories, ${menuProducts.length} products, ${specialOffers.length} offers, ${storyChapters.length} story chapters, and mascot settings.`)
+try {
+  await pb.collection('site_settings').getFirstListItem('slug = "default"')
+} catch (error) {
+  if (error.status !== 404) throw error
+  await pb.collection('site_settings').create({
+    slug: 'default',
+    hero_title: 'سلام! خیلی خوش اومدی به تریاپانی رفیق',
+    hero_subtitle: 'چی میل داری؟',
+    announcement_text: 'یه لحظه صبر کن تا جادو رو ببینی ✨',
+  })
+}
+
+console.log(`PocketBase schema ready. Seeded ${menuCategories.length} categories, ${menuProducts.length} products, ${specialOffers.length} offers, ${storyChapters.length} story chapters, mascot settings, and site texts.`)

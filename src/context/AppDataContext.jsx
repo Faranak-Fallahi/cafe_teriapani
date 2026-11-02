@@ -3,6 +3,7 @@ import { menuCategories as mockCategories } from '../data/menuData.js'
 import { menuProducts as mockProducts } from '../data/menuProducts.js'
 import { specialOffers as mockOffers } from '../data/specialOffers.js'
 import { storyChapters as mockStory } from '../data/storyChapters.js'
+import { defaultSiteSettings, siteSettingsFromRow } from '../data/siteSettings.js'
 import { loadMenu } from '../data/loadMenu.js'
 import { AppDataContext } from './appDataContext.js'
 import { getFileUrl, pb } from '../lib/pocketbase.js'
@@ -104,8 +105,9 @@ export function AppDataProvider({ children }) {
     loadError: '',
     offers: mockOffers,
     story: mockStory,
+    siteSettings: defaultSiteSettings,
   }))
-  const { categories, products, offers, story, dataSource, isMenuLoading, loadError } = menu
+  const { categories, products, offers, story, siteSettings, dataSource, isMenuLoading, loadError } = menu
   const mountedRef = useRef(false)
   const requestIdRef = useRef(0)
   const [session, setSession] = useState(pb.authStore.record)
@@ -126,6 +128,7 @@ export function AppDataProvider({ children }) {
         products: result.products.map(productFromRow),
         offers: result.offers.map(offerFromRow),
         story: result.story.map(storyFromRow),
+        siteSettings: siteSettingsFromRow(result.siteSettings),
         dataSource: 'pocketbase',
         isMenuLoading: false,
         loadError: '',
@@ -144,6 +147,7 @@ export function AppDataProvider({ children }) {
             products: mockProducts,
             offers: mockOffers,
             story: mockStory,
+            siteSettings: defaultSiteSettings,
             dataSource: 'mock',
             isMenuLoading: false,
             loadError: 'اتصال به منوی آنلاین برقرار نشد؛ منوی نمونه و موقت نمایش داده می‌شود.',
@@ -288,11 +292,30 @@ export function AppDataProvider({ children }) {
     await refreshMenu()
   }, [refreshMenu])
 
+  const saveSiteSettings = useCallback(async (settings) => {
+    const row = {
+      slug: 'default',
+      hero_title: settings.heroTitle.trim(),
+      hero_subtitle: settings.heroSubtitle.trim(),
+      announcement_text: settings.announcementText.trim(),
+    }
+
+    try {
+      const existing = await pb.collection('site_settings').getFirstListItem('slug = "default"')
+      await pb.collection('site_settings').update(existing.id, row)
+    } catch (error) {
+      if (error.status !== 404) throw error
+      await pb.collection('site_settings').create(row)
+    }
+    await refreshMenu()
+  }, [refreshMenu])
+
   const value = useMemo(() => ({
     categories,
     products,
     offers,
     story,
+    siteSettings,
     dataSource,
     loadError,
     isMenuLoading,
@@ -306,7 +329,8 @@ export function AppDataProvider({ children }) {
     deleteCategory,
     saveProduct,
     deleteProduct,
-  }), [categories, products, offers, story, dataSource, loadError, isMenuLoading, session, isAdmin, adminLoading, signIn, signOut, refreshMenu, saveCategory, deleteCategory, saveProduct, deleteProduct])
+    saveSiteSettings,
+  }), [categories, products, offers, story, siteSettings, dataSource, loadError, isMenuLoading, session, isAdmin, adminLoading, signIn, signOut, refreshMenu, saveCategory, deleteCategory, saveProduct, deleteProduct, saveSiteSettings])
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
 }

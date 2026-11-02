@@ -311,7 +311,7 @@
 .admin-icon-button--danger { color: #a1321b; }
 .admin-logout-button { display: inline-flex; min-height: 2.4rem; align-items: center; gap: 0.3rem; border: 0; border-radius: 9999px; background: rgb(242 106 46 / 12%); padding: 0.4rem 0.65rem; color: #3d2924; font-size: 0.78rem; font-weight: 700; }
 .admin-tabs { display: flex; flex: 0 0 auto; gap: 0.5rem; padding: 0.75rem 0.9rem 0.3rem; }
-.admin-tab { min-height: 2.7rem; flex: 1; border: 1px solid rgb(242 106 46 / 20%); border-radius: 9999px; background: #fffaf0; color: #3d2924; font-weight: 700; }
+.admin-tab { min-height: 2.7rem; flex: 1; border: 1px solid rgb(242 106 46 / 20%); border-radius: 9999px; background: #fffaf0; padding-inline: 0.25rem; color: #3d2924; font-size: clamp(0.65rem, 2.5vw, 0.82rem); font-weight: 700; }
 .admin-tab--active { border-color: #f26a2e; background: #f26a2e; color: #fff4df; }
 .admin-panel-content { min-height: 0; flex: 1; overflow-y: auto; padding: 0.75rem 0.9rem 1.5rem; }
 .admin-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; }

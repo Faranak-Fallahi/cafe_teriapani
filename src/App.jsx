@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { CategoriesScreen } from './components/CategoriesScreen.jsx'
 import { WelcomeScreen } from './components/WelcomeScreen.jsx'
 import { AppDataProvider } from './context/AppDataContext.jsx'
+import { useAppData } from './hooks/useAppData.js'
 
 function getAnchorPosition(frame, anchor) {
   const frameRect = frame.getBoundingClientRect()
@@ -17,6 +18,7 @@ function getAnchorPosition(frame, anchor) {
 }
 
 function AppContent() {
+  const { siteSettings } = useAppData()
   const [screen, setScreen] = useState('welcome')
   const [mascotBounds, setMascotBounds] = useState(null)
   const frameRef = useRef(null)
@@ -93,6 +95,7 @@ function AppContent() {
             prefersReducedMotion={prefersReducedMotion}
             doodlesActive={screen === 'welcome'}
             mascotAnchorRef={welcomeMascotRef}
+            siteSettings={siteSettings}
           />
         </div>
         <div className={`app-layer ${isMenuVisible ? 'app-layer--active' : 'app-layer--inactive'}`} aria-hidden={!isMenuVisible}>

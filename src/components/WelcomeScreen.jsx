@@ -10,7 +10,7 @@ const doodles = [
   { id: 'drops', Icon: Droplets, className: 'welcome-doodle--drops', tone: 'text-primary/70', rotate: -14 },
 ]
 
-export function WelcomeScreen({ onEnter, prefersReducedMotion, doodlesActive, mascotAnchorRef }) {
+export function WelcomeScreen({ onEnter, prefersReducedMotion, doodlesActive, mascotAnchorRef, siteSettings }) {
   return (
     <section aria-label="صفحه‌ی خوش‌آمد تریاپانی" className="welcome-screen flex min-h-0 flex-1 flex-col items-center justify-between overflow-y-auto px-7 pb-8 pt-7 text-center sm:px-9 sm:pt-9">
       <div className="flex w-full flex-col items-center">
@@ -40,8 +40,8 @@ export function WelcomeScreen({ onEnter, prefersReducedMotion, doodlesActive, ma
       </div>
 
       <div className="mt-5 flex w-full flex-col items-center">
-        <p className="welcome-speech">سلام! خیلی خوش اومدی به تریاپانی رفیق</p>
-        <p className="mt-3 text-sm font-semibold text-dark/70">در حال چیدن میز خوشمزه‌ها...</p>
+        <p className="welcome-speech">{siteSettings?.heroTitle || 'سلام! خیلی خوش اومدی به تریاپانی رفیق'}</p>
+        <p className="mt-3 text-sm font-semibold text-dark/70">{siteSettings?.heroSubtitle || 'چی میل داری؟'}</p>
         <button
           type="button"
           onClick={onEnter}
@@ -50,7 +50,7 @@ export function WelcomeScreen({ onEnter, prefersReducedMotion, doodlesActive, ma
           <span>مشاهده منوی خوشمزه</span>
           <ArrowLeft aria-hidden="true" size={22} />
         </button>
-        <p className="mt-3 text-xs text-dark/60">یه لحظه صبر کن تا جادو رو ببینی ✨</p>
+        <p className="mt-3 text-xs text-dark/60">{siteSettings?.announcementText ?? 'یه لحظه صبر کن تا جادو رو ببینی ✨'}</p>
       </div>
     </section>
   )
