@@ -5,6 +5,7 @@ import { ConfirmDialog } from './ConfirmDialog.jsx'
 import { Toast } from './Toast.jsx'
 import { BackButton } from './BackButton.jsx'
 import { ProductImage } from './ProductImage.jsx'
+import { optimizeImage } from '../utils/imageOptimizer.js'
 
 const emptyCategory = { title: '', funTitle: '', mascotMessage: '', sticker: '☕', order: 1, tone: 'cream', isActive: true }
 const emptyProduct = { name: '', price: '', description: '', ingredients: '', allergens: '', image: '', isAvailable: true, categoryIds: [], mascotMessage: '', pairingProductId: '' }
@@ -83,6 +84,22 @@ export function AdminPanel({ onClose }) {
     try { await signOut(); onClose() } catch (signOutError) { showError(signOutError) } finally { setBusy(false) }
   }
 
+  const handleProductImageChange = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      setImageFile(null)
+      return
+    }
+
+    setBusy(true)
+    setError('')
+    try {
+      setImageFile(await optimizeImage(file))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const filteredProducts = productFilter === 'all'
     ? products
     : products.filter((product) => product.categoryIds?.includes(productFilter) || product.categoryId === productFilter)
@@ -147,7 +164,7 @@ export function AdminPanel({ onClose }) {
                 <label>پیام مسکات<textarea rows="2" value={productDraft.mascotMessage || ''} onChange={(event) => setProductDraft({ ...productDraft, mascotMessage: event.target.value })} /></label>
                 <label>پیشنهاد محصول مکمل<select value={productDraft.pairingProductId || ''} onChange={(event) => setProductDraft({ ...productDraft, pairingProductId: event.target.value })}><option value="">بدون پیشنهاد</option>{products.filter((product) => product.id !== productDraft.id).map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select></label>
                 <fieldset className="admin-category-checks"><legend>دسته‌بندی‌های محصول (چند انتخاب)</legend>{categories.map((category) => <label className="admin-checkbox" key={category.id}><input type="checkbox" checked={productDraft.categoryIds?.includes(category.id) ?? productDraft.categoryId === category.id} onChange={(event) => { const previousIds = productDraft.categoryIds ?? (productDraft.categoryId ? [productDraft.categoryId] : []); const categoryIds = event.target.checked ? [...new Set([...previousIds, category.id])] : previousIds.filter((id) => id !== category.id); setProductDraft({ ...productDraft, categoryIds }) }} /> {category.title}</label>)}</fieldset>
-                <label className="admin-upload-label"><ImagePlus size={19} /> عکس محصول<input type="file" accept="image/*" onChange={(event) => setImageFile(event.target.files?.[0] ?? null)} />{imageFile?.name || productDraft.image || 'بدون تصویر'}</label>
+                <label className="admin-upload-label"><ImagePlus size={19} /> عکس محصول<input type="file" accept="image/*" disabled={busy} onChange={handleProductImageChange} />{imageFile?.name || productDraft.image || 'بدون تصویر'}</label>
                 <label className="admin-checkbox"><input type="checkbox" checked={productDraft.isAvailable !== false} onChange={(event) => setProductDraft({ ...productDraft, isAvailable: event.target.checked })} /> موجود و قابل‌نمایش</label>
                 {error && <p className="admin-form-error" role="alert">{error}</p>}
                 <div className="admin-form-actions"><button type="button" className="admin-secondary-button" onClick={clearEditor}>انصراف</button><button type="submit" className="admin-primary-button" disabled={busy}><Save size={17} /> ذخیره</button></div>
