@@ -8,14 +8,15 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "pb:serve": "pocketbase/pocketbase.exe serve --http=127.0.0.1:8090"
+    "pb:serve": "pocketbase/pocketbase.exe serve --http=127.0.0.1:8090",
+    "pb:seed": "node --env-file=.env scripts/seed-pocketbase.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.118.0",
     "framer-motion": "^14.3.0",
     "lucide-react": "^1.59.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "pocketbase": "^0.28.2"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
