@@ -1,7 +1,7 @@
 # گزارش نهایی بازبینی انتشار کافه تریاپانی
 
-**تاریخ بررسی:** ۲ نوامبر ۲۰۲۶  
-**شاخه:** `master`  
+**تاریخ بررسی:** ۲ نوامبر ۲۰۲۶
+**شاخه:** `master`
 **دامنه:** سورس برنامه، تنظیمات، اسکریپت‌های PocketBase، مستندات، تاریخچه Git و پاسخ محلی سرویس‌ها
 
 ## ۱. خلاصه وضعیت پروژه
@@ -31,7 +31,7 @@
 
 ## ۴. نتیجه بررسی Git
 
-- شاخه فعال `master` است؛ پس از commit این بازبینی ۲۳ commit در تاریخچه وجود دارد و شاخه محلی ۱۱ commit از `origin/master` جلوتر است.
+- شاخه فعال `master` است؛ در زمان تحویل ۲۵ commit در تاریخچه وجود دارد و شاخه محلی ۱۳ commit از `origin/master` جلوتر است.
 - هیچ تغییر tracked یا staged باقی نمانده است. ۸ مورد untracked از قبل وجود داشتند: فایل‌های ضمیمه و فایل‌های PocketBase؛ محتوا یا وضعیتشان تغییر نکرد و هیچ‌کدام stage نشدند.
 - `.env` tracked نیست و ignore می‌شود. بررسی تاریخچه نیز فایل `.env` را در commitها پیدا نکرد.
 - `.gitignore` موارد `.env`، `node_modules`، `dist`، logها، `pb_data` و فایل اجرایی `pocketbase.exe` را پوشش می‌دهد. نمونه‌های `.env`، build و dependencyها نیز tracked نیستند.
@@ -127,11 +127,12 @@ README قبلی متن اولیه قالب Vite بود و با وضعیت Pocket
 ## ۱۵. commitهای جدید این بازبینی
 
 - `c34b8ab docs(readme): document PocketBase setup and data safety`
-- خود این گزارش نیز در commit جداگانه ثبت شد؛ شناسه آن در خلاصه چت آمده است.
+- `efa94ba docs(audit): add final release audit report`
+- `docs(audit): fix report formatting` (commit جاری)
 
 ## ۱۶. وضعیت نهایی Git
 
-- شاخه `master`، جلوتر از `origin/master` به‌اندازه ۱۱ commit.
+- شاخه `master`، جلوتر از `origin/master` به‌اندازه ۱۳ commit.
 - هیچ تغییر tracked/staged ثبت‌نشده‌ای باقی نمانده است.
 - ۸ مورد untracked موجود از قبل، از جمله `pocketbase/pb_migrations/` و فایل‌های ضمیمه، عمداً حفظ شده‌اند و commit نشده‌اند.
 - `.env`، `pb_data`، PocketBase executable، `dist` و `node_modules` در ignore هستند.
