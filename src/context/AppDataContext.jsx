@@ -3,6 +3,7 @@ import { menuCategories as mockCategories } from '../data/menuData.js'
 import { menuProducts as mockProducts } from '../data/menuProducts.js'
 import { specialOffers as mockOffers } from '../data/specialOffers.js'
 import { storyChapters as mockStory } from '../data/storyChapters.js'
+import { loadMenu } from '../data/loadMenu.js'
 import { AppDataContext } from './appDataContext.js'
 import { getFileUrl, pb } from '../lib/pocketbase.js'
 
@@ -103,26 +104,14 @@ export function AppDataProvider({ children }) {
     setMenu((previous) => ({ ...previous, isMenuLoading: true, loadError: '' }))
     try {
       const authenticatedAsAdmin = pb.authStore.isValid && pb.authStore.record?.role === 'admin'
-      const [categoryRows, productRows, offerRows, storyRows] = await Promise.all([
-        pb.collection('categories').getFullList({
-          sort: 'sort_order',
-          ...(authenticatedAsAdmin ? {} : { filter: 'is_active = true' }),
-        }),
-        pb.collection('products').getFullList({
-          sort: 'name',
-          expand: 'categories',
-          ...(authenticatedAsAdmin ? {} : { filter: 'is_available = true' }),
-        }),
-        pb.collection('special_offers').getFullList({ filter: 'is_active = true', sort: 'name' }),
-        pb.collection('our_story').getFullList({ sort: 'sort_order' }),
-      ])
+      const result = await loadMenu(pb, authenticatedAsAdmin)
       if (!mountedRef.current || requestId !== requestIdRef.current) return false
       // Publish both lists together; never mix live categories with mock products.
       setMenu({
-        categories: categoryRows.map(categoryFromRow),
-        products: productRows.map(productFromRow),
-        offers: offerRows.map(offerFromRow),
-        story: storyRows.map(storyFromRow),
+        categories: result.categories.map(categoryFromRow),
+        products: result.products.map(productFromRow),
+        offers: result.offers.map(offerFromRow),
+        story: result.story.map(storyFromRow),
         dataSource: 'pocketbase',
         isMenuLoading: false,
         loadError: '',
