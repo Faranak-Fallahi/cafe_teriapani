@@ -26,7 +26,8 @@ const publicReadRules = {
 }
 
 function field(type, name, options = {}, required = false) {
-  return { type, name, required, options }
+  // PocketBase 0.23+ accepts field configuration as flattened properties.
+  return { type, name, required, ...options }
 }
 
 async function ensureCollection(name, fields, options = {}) {
@@ -41,7 +42,17 @@ async function ensureCollection(name, fields, options = {}) {
 
   try {
     const collection = await pb.collections.getOne(name)
-    return await pb.collections.update(collection.id, body)
+    // Avoid forcing a new required auth field onto existing user records.
+    // Admin role provisioning is handled separately for an already-used PB.
+    if (options.type === 'auth') return collection
+    // PocketBase auth collections have required system fields (password,
+    // tokenKey, email, etc.). Preserve existing fields when extending them.
+    const mergedFields = new Map((collection.fields || []).map((existingField) => [existingField.name, existingField]))
+    for (const requestedField of fields) mergedFields.set(requestedField.name, requestedField)
+    return await pb.collections.update(collection.id, {
+      ...body,
+      fields: [...mergedFields.values()],
+    })
   } catch (error) {
     if (error.status !== 404) throw error
     return pb.collections.create(body)
@@ -64,7 +75,8 @@ const categoriesCollection = await ensureCollection('categories', [
 ], { collectionOptions: { indexes: ['CREATE UNIQUE INDEX idx_categories_slug ON categories (slug)'] } })
 
 await ensureCollection('users', [
-  field('select', 'role', { maxSelect: 1, values: ['admin'] }, true),
+  // Keep this optional so existing auth records without a role remain valid.
+  field('select', 'role', { maxSelect: 1, values: ['admin'] }),
 ], {
   type: 'auth',
   rules: {
