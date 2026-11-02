@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "pb:serve": "pocketbase/pocketbase.exe serve --http=127.0.0.1:8090",
+    "pb:serve": "pocketbase/pocketbase.exe serve --dir=pocketbase/pb_data --http=127.0.0.1:8090",
     "pb:seed": "node --env-file=.env scripts/seed-pocketbase.js"
   },
   "dependencies": {
