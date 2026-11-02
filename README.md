@@ -1,16 +1,103 @@
-# React + Vite
+# کافه تریاپانی
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+وب‌اپلیکیشن منوی کافه با رابط فارسی و راست‌چین. برنامه با React و Vite ساخته شده و برای خواندن و مدیریت اطلاعات از PocketBase استفاده می‌کند.
 
-Currently, two official plugins are available:
+## قابلیت‌ها
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- مرور دسته‌بندی‌ها، زیردسته‌ها، محصولات، پیشنهادهای ویژه و داستان کافه
+- نمایش جزئیات محصول، مواد تشکیل‌دهنده، آلرژن‌ها و تصاویر
+- نمایش پیام‌های مسکات و متن‌های صفحه خوش‌آمدگویی
+- ورود مدیر محدود و مدیریت دسته‌بندی‌ها، محصولات و متن‌های سایت از داخل وب‌اپ
+- نمایش داده‌های نمونه هنگام قطع بودن PocketBase
 
-## React Compiler
+## پیش‌نیازها
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js و npm سازگار با نسخه Vite پروژه (محیط بررسی‌شده: Node.js 24)
+- فایل اجرایی PocketBase برای سیستم‌عامل مقصد
 
-## Expanding the Oxlint configuration
+## نصب و اجرای محلی
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```powershell
+npm ci
+Copy-Item .env.example .env
+npm run pb:serve
+```
+
+اجرای `pb:serve` در ترمینال اول، سرور را روی `http://127.0.0.1:8090` و رابط مدیریت PocketBase را روی `http://127.0.0.1:8090/_/` در دسترس می‌گذارد. فایل اجرایی ویندوز باید در `pocketbase/pocketbase.exe` باشد. در اولین اجرا، PocketBase از شما می‌خواهد یک Superuser بسازید.
+
+در ترمینال دوم:
+
+```powershell
+npm run dev
+```
+
+Vite نشانی محلی را در ترمینال نشان می‌دهد. برای بررسی نسخه انتشار:
+
+```powershell
+npm run lint
+npm run build
+```
+
+## تنظیمات محیطی
+
+نام متغیرهای مورد استفاده:
+
+| متغیر | کاربرد |
+| --- | --- |
+| `VITE_POCKETBASE_URL` | نشانی PocketBase که هنگام build در مرورگر استفاده می‌شود |
+| `POCKETBASE_URL` | نشانی سرور برای اسکریپت seed؛ اختیاری و پیش‌فرض آن `http://127.0.0.1:8090` است |
+| `POCKETBASE_ADMIN_EMAIL` | هویت Superuser برای اجرای محلی seed؛ فقط سمت سرور |
+| `POCKETBASE_ADMIN_PASSWORD` | گذرواژه Superuser برای اجرای محلی seed؛ فقط سمت سرور |
+
+فایل `.env.example` فقط نام متغیرها و مقادیر نمونه غیرحساس را دارد. مقادیر واقعی را در `.env` محلی یا secret manager محیط استقرار نگه دارید. هرگز `POCKETBASE_ADMIN_*` را با پیشوند `VITE_` نگذارید؛ متغیرهای `VITE_` به کد مرورگر راه پیدا می‌کنند. فایل `.env` و پوشه `pocketbase/pb_data` در Git نادیده گرفته شده‌اند و نباید commit شوند.
+
+## راه‌اندازی داده و حساب مدیر وب‌اپ
+
+1. PocketBase را اجرا کنید و نخستین Superuser را از رابط خود PocketBase بسازید. Superuser برای مدیریت زیرساخت PocketBase است و حساب ورود پنل وب‌اپ نیست.
+2. مقادیر Superuser را فقط در `.env` محلی تنظیم کنید؛ متغیرها برای seed سمت سرور هستند.
+3. در یک ترمینال دیگر، در صورت نیاز به ساخت/به‌روزرسانی اسکیما و واردکردن داده‌های نمونه، اجرا کنید:
+
+   ```powershell
+   npm run pb:seed
+   ```
+
+   `npm run setup:db` هم همین seed را اجرا می‌کند. seed برای دسته‌بندی‌ها، محصولات، پیشنهادهای ویژه، داستان و تنظیمات مسکات رکوردهای هم‌نام را با داده‌های فایل‌های نمونه به‌روزرسانی می‌کند. بنابراین برای دیتابیسی که از پنل ویرایش شده، آن را بدون قصد بازگردانی داده‌های نمونه اجرا نکنید. رکورد `site_settings` موجود را seed بازنویسی نمی‌کند.
+
+4. از رابط PocketBase یک رکورد در کالکشن محدود `admins` بسازید و نقش آن را `admin` تنظیم کنید. با همان حساب محدود، از دکمه ورود مدیر در وب‌اپ وارد شوید. وب‌اپ با کالکشن `_superusers` احراز هویت نمی‌کند.
+
+## کالکشن‌ها و دسترسی‌ها
+
+- `categories`: نام، عنوان نمایشی، آیکون، پیام مسکات، ترتیب و وضعیت نمایش
+- `products`: اطلاعات و قیمت محصول، تصویر، موجودی و رابطه با چند دسته‌بندی
+- `special_offers`: پیشنهادهای ویژه، قیمت، تصویر و برچسب‌ها
+- `our_story`: فصل‌ها و محتوای داستان کافه
+- `mascot_settings`: پیام‌های پیش‌فرض مسکات
+- `site_settings`: عنوان خوش‌آمدگویی، زیرعنوان/حباب مسکات و اعلان کوتاه
+- `admins`: احراز هویت مدیر محدود وب‌اپ؛ فیلد نقش باید `admin` باشد
+- `users`: کالکشن سازگاری با حساب‌های قبلی؛ وب‌اپ فقط حسابی را مدیر می‌داند که نقش `admin` داشته باشد
+
+داده‌های منو و تنظیمات متن برای خواندن عمومی هستند. عملیات نوشتن با نقش `admin` در قواعد API سمت PocketBase محدود می‌شوند؛ پنهان بودن کنترل‌های پنل در رابط به‌تنهایی مرز امنیتی نیست.
+
+## ساختار کلی
+
+```text
+src/components/       صفحه‌ها و اجزای رابط کاربری و پنل مدیر
+src/context/          وضعیت مشترک منو و نشست مدیر
+src/data/             داده‌های نمونه و نگاشت داده‌های PocketBase
+src/hooks/            hookهای برنامه
+src/lib/pocketbase.js کلاینت PocketBase مرورگر
+scripts/              اسکریپت راه‌اندازی و seed
+pocketbase/           فایل اجرایی محلی و داده‌های runtime
+```
+
+## پشتیبان‌گیری و استقرار
+
+- برای پشتیبان محلی، PocketBase را با `Ctrl+C` متوقف کنید و یک کپی از کل پوشه `pocketbase/pb_data` را در محل امن و جدا از مخزن نگه دارید. این پوشه می‌تواند شامل دیتابیس و فایل‌های آپلودشده باشد. پیش از به‌روزرسانی یا استقرار، از پشتیبان قابل‌بازیابی اطمینان بگیرید.
+- در استقرار داخلی، PocketBase را به‌عنوان سرویس مستقل اجرا کنید و دسترسی عمومی را از طریق reverse proxy با HTTPS فراهم کنید. نشانی نهایی را در `VITE_POCKETBASE_URL` پیش از build فرانت‌اند بگذارید.
+- دستور `pb:serve` برای اجرای محلی ویندوز و اتصال loopback تنظیم شده است؛ تنظیمات شبکه، TLS، دسترسی و پشتیبان‌گیری سرور استقرار را جداگانه انجام دهید.
+- seed را در فرایند معمول deployment اجرا نکنید؛ ممکن است محتوای مدیریتی کالکشن‌های seedشده را با داده نمونه جایگزین کند.
+- `.env`، `pb_data`، فایل اجرایی PocketBase و فایل‌های پشتیبان دیتابیس را به Git اضافه نکنید.
+
+## تست‌ها
+
+در حال حاضر script تست خودکار در `package.json` تعریف نشده است. برای بررسی ایستا و ساخت انتشار از `npm run lint` و `npm run build` استفاده کنید.

@@ -1,17 +1,13 @@
-﻿# Local PocketBase
+# اجرای محلی PocketBase
 
-Download the Windows executable from the official PocketBase downloads page and place it here as `pocketbase.exe`. The executable and local database files are ignored by Git.
+راهنمای نصب، seed، حساب مدیر، پشتیبان‌گیری و استقرار در [راهنمای اصلی پروژه](../README.md) است.
 
-From the project root, start the local API on port 8090:
+در ویندوز، فایل اجرایی را با نام `pocketbase.exe` در همین پوشه قرار دهید؛ فایل اجرایی و `pb_data/` در Git نادیده گرفته می‌شوند. از ریشه پروژه اجرا کنید:
 
 ```powershell
 npm run pb:serve
 ```
 
-The command stores PocketBase data in `pocketbase/pb_data`.
+سرور محلی روی `http://127.0.0.1:8090` و پنل داخلی PocketBase روی `http://127.0.0.1:8090/_/` بالا می‌آید. Superuser فقط برای مدیریت خود PocketBase و اجرای seed سمت سرور است؛ ورود وب‌اپ باید با حساب محدود کالکشن `admins` انجام شود.
 
-Open the admin UI at `http://127.0.0.1:8090/_/`. On first run, create the first superuser through the admin setup flow (or run `pocketbase.exe superuser create <email> <password>` from this directory).
-
-PocketBase stores its local database under `pocketbase/pb_data`. Keep this directory out of commits and back it up separately when needed.
-
-After creating the superuser, add `POCKETBASE_ADMIN_EMAIL` and `POCKETBASE_ADMIN_PASSWORD` to the root `.env` using that superuser's credentials, then run `npm run pb:seed`. The seed creates the public collections, demo data, and a dedicated `admins` auth collection. In the PocketBase admin UI, create an `admins` record with role `admin`; use that record's email and password to sign in to the app. The web app never authenticates against the `_superusers` collection.
+محتوای `pb_data/` شامل دیتابیس و فایل‌های آپلودشده است. آن را commit نکنید؛ برای پشتیبان‌گیری، ابتدا سرور را متوقف و سپس از کل پوشه یک کپی امن بگیرید. دستور `npm run pb:seed` می‌تواند محتوای نمونه چند کالکشن را بازنویسی کند؛ جزئیات و هشدارها در راهنمای اصلی آمده‌اند.
