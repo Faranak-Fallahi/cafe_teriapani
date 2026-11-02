@@ -81,6 +81,20 @@ function storyFromRow(row) {
   }
 }
 
+function hasAdminAccess() {
+  return pb.authStore.isValid && pb.authStore.record?.role === 'admin'
+}
+
+function loginErrorMessage(error, authenticatedWithoutAdminRole) {
+  const status = error?.status || error?.response?.status
+  if (!status || status === 0) return 'اتصال به سرور پاکت‌بیس برقرار نشد. روشن بودن سرور و نشانی اتصال را بررسی کنید.'
+  if (authenticatedWithoutAdminRole) return 'این حساب کاربری مجوز ورود به پنل مدیریت را ندارد.'
+  if (status === 404) return 'بخش ورود مدیر هنوز راه‌اندازی نشده است. ابتدا اسکیما و حساب مدیر پاکت‌بیس را تنظیم کنید.'
+  if (status === 400 || status === 401) return 'ایمیل یا رمز عبور نادرست است.'
+  if (status === 403) return 'این حساب اجازه ورود به پنل مدیریت را ندارد.'
+  return 'ورود انجام نشد. لطفاً دوباره تلاش کنید یا تنظیمات حساب مدیر را بررسی کنید.'
+}
+
 export function AppDataProvider({ children }) {
   const [menu, setMenu] = useState(() => ({
     categories: [],
@@ -95,7 +109,7 @@ export function AppDataProvider({ children }) {
   const mountedRef = useRef(false)
   const requestIdRef = useRef(0)
   const [session, setSession] = useState(pb.authStore.record)
-  const [isAdmin, setIsAdmin] = useState(pb.authStore.record?.role === 'admin' && pb.authStore.isValid)
+  const [isAdmin, setIsAdmin] = useState(hasAdminAccess())
   const [adminLoading, setAdminLoading] = useState(false)
 
   const refreshMenu = useCallback(async () => {
@@ -103,7 +117,7 @@ export function AppDataProvider({ children }) {
     const requestId = ++requestIdRef.current
     setMenu((previous) => ({ ...previous, isMenuLoading: true, loadError: '' }))
     try {
-      const authenticatedAsAdmin = pb.authStore.isValid && pb.authStore.record?.role === 'admin'
+      const authenticatedAsAdmin = hasAdminAccess()
       const result = await loadMenu(pb, authenticatedAsAdmin)
       if (!mountedRef.current || requestId !== requestIdRef.current) return false
       // Publish both lists together; never mix live categories with mock products.
@@ -150,21 +164,38 @@ export function AppDataProvider({ children }) {
 
   useEffect(() => pb.authStore.onChange((_token, record) => {
     setSession(record)
-    setIsAdmin(pb.authStore.isValid && record?.role === 'admin')
+    setIsAdmin(hasAdminAccess())
     if (mountedRef.current) void refreshMenu()
   }, true), [refreshMenu])
 
   const signIn = useCallback(async (email, password) => {
     setAdminLoading(true)
     try {
-      const auth = await pb.collection('users').authWithPassword(email.trim(), password)
-      if (auth.record?.role !== 'admin') {
+      let lastAuthError
+      let authenticatedWithoutAdminRole = false
+      let missingAdminsCollection = false
+
+      for (const collectionName of ['admins', 'users']) {
+        try {
+          const auth = await pb.collection(collectionName).authWithPassword(email.trim(), password)
+          if (auth.record?.role === 'admin') {
+            setSession(auth.record)
+            setIsAdmin(true)
+            await refreshMenu()
+            return
+          }
+          authenticatedWithoutAdminRole = true
+        } catch (error) {
+          lastAuthError = error
+          if (collectionName === 'admins' && error.status === 404) missingAdminsCollection = true
+        }
         pb.authStore.clear()
-        throw new Error('این حساب دسترسی مدیر ندارد.')
       }
-      setSession(auth.record)
-      setIsAdmin(true)
-      await refreshMenu()
+
+      if (missingAdminsCollection && !authenticatedWithoutAdminRole && lastAuthError?.status !== 0) {
+        throw new Error(loginErrorMessage({ status: 404 }, false))
+      }
+      throw new Error(loginErrorMessage(lastAuthError, authenticatedWithoutAdminRole))
     } finally {
       setAdminLoading(false)
     }

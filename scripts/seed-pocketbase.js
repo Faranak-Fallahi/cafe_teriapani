@@ -43,8 +43,8 @@ async function ensureCollection(name, fields, options = {}) {
   try {
     const collection = await pb.collections.getOne(name)
     // Avoid forcing a new required auth field onto existing user records.
-    // Admin role provisioning is handled separately for an already-used PB.
-    if (options.type === 'auth') return collection
+    // Admin credentials use the separate, scoped admins collection.
+    if (name === 'users') return collection
     // PocketBase auth collections have required system fields (password,
     // tokenKey, email, etc.). Preserve existing fields when extending them.
     const mergedFields = new Map((collection.fields || []).map((existingField) => [existingField.name, existingField]))
@@ -77,6 +77,20 @@ const categoriesCollection = await ensureCollection('categories', [
 await ensureCollection('users', [
   // Keep this optional so existing auth records without a role remain valid.
   field('select', 'role', { maxSelect: 1, values: ['admin'] }),
+], {
+  type: 'auth',
+  rules: {
+    listRule: adminRule,
+    viewRule: adminRule,
+    createRule: adminRule,
+    updateRule: adminRule,
+    deleteRule: adminRule,
+  },
+  collectionOptions: { passwordAuth: { enabled: true, identityFields: ['email'] } },
+})
+
+await ensureCollection('admins', [
+  field('select', 'role', { maxSelect: 1, values: ['admin'] }, true),
 ], {
   type: 'auth',
   rules: {

@@ -14,4 +14,4 @@ Open the admin UI at `http://127.0.0.1:8090/_/`. On first run, create the first 
 
 PocketBase stores its local database under `pocketbase/pb_data`. Keep this directory out of commits and back it up separately when needed.
 
-After creating the superuser, add `POCKETBASE_ADMIN_EMAIL` and `POCKETBASE_ADMIN_PASSWORD` to the root `.env` using that superuser's credentials, then run `npm run pb:seed`. The seed creates the public collections and demo data. In the admin UI, create a regular record in the `users` auth collection with role `admin`; use that record's email and password to sign in to the app.
+After creating the superuser, add `POCKETBASE_ADMIN_EMAIL` and `POCKETBASE_ADMIN_PASSWORD` to the root `.env` using that superuser's credentials, then run `npm run pb:seed`. The seed creates the public collections, demo data, and a dedicated `admins` auth collection. In the PocketBase admin UI, create an `admins` record with role `admin`; use that record's email and password to sign in to the app. The web app never authenticates against the `_superusers` collection.
