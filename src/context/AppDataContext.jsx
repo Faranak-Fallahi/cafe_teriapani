@@ -32,6 +32,7 @@ function categoryFromRow(row) {
 
 function productFromRow(row) {
   const categoryIds = (row.expand?.categories ?? []).map((category) => category.slug)
+  const isFavorite = categoryIds.includes('favorites')
   return {
     id: row.slug,
     recordId: row.id,
@@ -49,7 +50,7 @@ function productFromRow(row) {
     isAvailable: row.is_available !== false,
     mascotMessage: row.mascot_message || '',
     pairingProductId: row.pairing_product_slug || '',
-    badge: row.badge || '',
+    badge: isFavorite ? 'محبوب این هفته' : row.badge || '',
     isSample: false,
   }
 }
@@ -79,7 +80,12 @@ function storyFromRow(row) {
     description: row.description || '',
     photoLabel: row.photo_label || '',
     image: row.photo ? getFileUrl(row, row.photo) : '',
+    order: Number(row.sort_order) || 0,
   }
+}
+
+function storySlugFromTitle() {
+  return `chapter-${crypto.randomUUID()}`
 }
 
 function hasAdminAccess() {
@@ -310,6 +316,38 @@ export function AppDataProvider({ children }) {
     await refreshMenu()
   }, [refreshMenu])
 
+  const saveStoryChapter = useCallback(async (chapter) => {
+    const slug = chapter.id || storySlugFromTitle()
+    const row = {
+      slug,
+      chapter: chapter.chapter || '',
+      title: chapter.title.trim(),
+      description: chapter.description || '',
+      photo_label: chapter.photoLabel || chapter.title.trim(),
+      sort_order: Number(chapter.order) || 0,
+    }
+    let data = row
+    if (chapter.imageFile) {
+      data = new FormData()
+      for (const [key, value] of Object.entries(row)) data.append(key, String(value))
+      data.append('photo', chapter.imageFile)
+    }
+
+    if (chapter.recordId) {
+      await pb.collection('our_story').update(chapter.recordId, data)
+    } else {
+      await pb.collection('our_story').create(data)
+    }
+    await refreshMenu()
+  }, [refreshMenu])
+
+  const deleteStoryChapter = useCallback(async (chapterId) => {
+    const chapter = story.find((item) => item.id === chapterId)
+    if (!chapter?.recordId) throw new Error('ÙØµÙ„ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯.')
+    await pb.collection('our_story').delete(chapter.recordId)
+    await refreshMenu()
+  }, [refreshMenu, story])
+
   const value = useMemo(() => ({
     categories,
     products,
@@ -330,7 +368,9 @@ export function AppDataProvider({ children }) {
     saveProduct,
     deleteProduct,
     saveSiteSettings,
-  }), [categories, products, offers, story, siteSettings, dataSource, loadError, isMenuLoading, session, isAdmin, adminLoading, signIn, signOut, refreshMenu, saveCategory, deleteCategory, saveProduct, deleteProduct, saveSiteSettings])
+    saveStoryChapter,
+    deleteStoryChapter,
+  }), [categories, products, offers, story, siteSettings, dataSource, loadError, isMenuLoading, session, isAdmin, adminLoading, signIn, signOut, refreshMenu, saveCategory, deleteCategory, saveProduct, deleteProduct, saveSiteSettings, saveStoryChapter, deleteStoryChapter])
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
 }

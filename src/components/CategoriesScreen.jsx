@@ -10,7 +10,7 @@ import { AdminEntryButton } from './AdminEntryButton.jsx'
 import { BackButton } from './BackButton.jsx'
 import { Toast } from './Toast.jsx'
 
-export function CategoriesScreen({ onBack, mascotAnchorRef }) {
+export function CategoriesScreen({ onBack, mascotAnchorRef, mascotVisible = true }) {
   const [toastMessage, setToastMessage] = useState('')
   const [activeCategory, setActiveCategory] = useState(null)
   const [isStoryOpen, setIsStoryOpen] = useState(false)
@@ -82,7 +82,7 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
 
   let pageContent
   if (isStoryOpen) {
-    pageContent = <OurStoryView onBack={() => setIsStoryOpen(false)} mascotAnchorRef={mascotAnchorRef} mascotInteractionProps={mascotInteractionProps} />
+    pageContent = <OurStoryView onBack={() => setIsStoryOpen(false)} mascotAnchorRef={mascotAnchorRef} mascotInteractionProps={mascotInteractionProps} mascotVisible={mascotVisible} />
   } else if (activeCategory) {
     pageContent = (
       <CategoryProductsScreen
@@ -90,12 +90,13 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
         onBack={() => setActiveCategory(null)}
         mascotAnchorRef={mascotAnchorRef}
         mascotInteractionProps={mascotInteractionProps}
+        mascotVisible={mascotVisible}
       />
     )
   } else {
     pageContent = (
       <div className="flex min-h-0 flex-1 flex-col">
-        <header className="category-header flex shrink-0 items-center justify-between px-5 pb-3 pt-5 sm:px-6">
+        <header className="category-header category-header--menu flex shrink-0 items-center justify-between px-5 pb-3 pt-5 sm:px-6">
           <div className="category-brand flex items-center gap-2">
             <Coffee className="category-brand-icon text-primary" size={27} aria-hidden="true" />
             <div>
@@ -106,7 +107,9 @@ export function CategoriesScreen({ onBack, mascotAnchorRef }) {
           </div>
           <aside className="header-mascot" aria-label="راهنمای منوی تریاپانی">
             <div className="header-speech">{siteSettings?.heroSubtitle || 'چی میل داری؟'}</div>
-            <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps} />
+            <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps}>
+              {mascotVisible && <img src="/assets/mascot.webp" alt="" className="header-mascot-image" />}
+            </button>
           </aside>
         </header>
 

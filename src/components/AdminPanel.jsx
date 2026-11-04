@@ -9,18 +9,21 @@ import { optimizeImage } from '../utils/imageOptimizer.js'
 
 const emptyCategory = { title: '', funTitle: '', mascotMessage: '', sticker: '☕', order: 1, tone: 'cream', isActive: true }
 const emptyProduct = { name: '', price: '', description: '', ingredients: '', allergens: '', image: '', isAvailable: true, categoryIds: [], mascotMessage: '', pairingProductId: '' }
+const emptyStoryChapter = { chapter: '', title: '', description: '', photoLabel: '', image: '', order: 1 }
 
 export function AdminPanel({ onClose }) {
   const {
     categories, products, signOut, saveCategory, deleteCategory,
-    saveProduct, deleteProduct, siteSettings, saveSiteSettings,
+    saveProduct, deleteProduct, story, saveStoryChapter, deleteStoryChapter, siteSettings, saveSiteSettings,
   } = useAppData()
   const [activeTab, setActiveTab] = useState('categories')
   const [categoryDraft, setCategoryDraft] = useState(null)
   const [productDraft, setProductDraft] = useState(null)
+  const [storyDraft, setStoryDraft] = useState(null)
   const [settingsEdits, setSettingsEdits] = useState(null)
   const [productFilter, setProductFilter] = useState('all')
   const [imageFile, setImageFile] = useState(null)
+  const [storyImageFile, setStoryImageFile] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -32,7 +35,9 @@ export function AdminPanel({ onClose }) {
   const clearEditor = () => {
     setCategoryDraft(null)
     setProductDraft(null)
+    setStoryDraft(null)
     setImageFile(null)
+    setStoryImageFile(null)
     setError('')
   }
 
@@ -68,12 +73,24 @@ export function AdminPanel({ onClose }) {
     } catch (saveError) { showError(saveError) } finally { setBusy(false) }
   }
 
+  const submitStoryChapter = async (event) => {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      await saveStoryChapter({ ...storyDraft, order: Number(storyDraft.order) || 0, imageFile: storyImageFile })
+      clearEditor()
+      setToastMessage('فصل قصه ذخیره شد ✓')
+    } catch (saveError) { showError(saveError) } finally { setBusy(false) }
+  }
+
   const confirmDelete = async () => {
     setBusy(true)
     setError('')
     try {
       if (pendingDelete.type === 'category') await deleteCategory(pendingDelete.item.id)
-      else await deleteProduct(pendingDelete.item.id)
+      else if (pendingDelete.type === 'product') await deleteProduct(pendingDelete.item.id)
+      else await deleteStoryChapter(pendingDelete.item.id)
       setPendingDelete(null)
       setToastMessage('حذف شد ✓')
     } catch (deleteError) { showError(deleteError) } finally { setBusy(false) }
@@ -116,6 +133,7 @@ export function AdminPanel({ onClose }) {
         <button type="button" aria-pressed={activeTab === 'categories'} className={activeTab === 'categories' ? 'admin-tab admin-tab--active' : 'admin-tab'} onClick={() => { clearEditor(); setActiveTab('categories') }}>دسته‌بندی‌ها</button>
         <button type="button" aria-pressed={activeTab === 'products'} className={activeTab === 'products' ? 'admin-tab admin-tab--active' : 'admin-tab'} onClick={() => { clearEditor(); setActiveTab('products') }}>محصولات</button>
         <button type="button" aria-pressed={activeTab === 'site-settings'} className={activeTab === 'site-settings' ? 'admin-tab admin-tab--active' : 'admin-tab'} onClick={() => { clearEditor(); setSettingsEdits(siteSettings); setActiveTab('site-settings') }}>متن‌های سایت</button>
+        <button type="button" aria-pressed={activeTab === 'story'} className={activeTab === 'story' ? 'admin-tab admin-tab--active' : 'admin-tab'} onClick={() => { clearEditor(); setActiveTab('story') }}>خاطره‌بازی</button>
       </nav>
 
       <main className="admin-panel-content">
@@ -184,6 +202,35 @@ export function AdminPanel({ onClose }) {
               {!filteredProducts.length && <p className="admin-empty">محصولی در این فهرست نیست.</p>}
             </div>
           </section>
+        ) : activeTab === 'story' ? (
+          <section aria-labelledby="admin-story-title">
+            <div className="admin-section-heading"><h2 id="admin-story-title">مدیریت فصل‌های قصه</h2><button type="button" className="admin-small-button" onClick={() => { setError(''); setStoryImageFile(null); setStoryDraft({ ...emptyStoryChapter, order: story.length + 1 }) }}><Plus size={17} /> فصل جدید</button></div>
+            {storyDraft && (
+              <form className="admin-editor-form" onSubmit={submitStoryChapter}>
+                <h3>{storyDraft.recordId ? 'ویرایش فصل' : 'افزودن فصل'}</h3>
+                <div className="admin-form-row"><label>برچسب فصل<input required value={storyDraft.chapter} onChange={(event) => setStoryDraft({ ...storyDraft, chapter: event.target.value })} placeholder="فصل اول" /></label><label>ترتیب نمایش<input type="number" min="1" value={storyDraft.order} onChange={(event) => setStoryDraft({ ...storyDraft, order: event.target.value })} /></label></div>
+                <label>تیتر فصل<input required maxLength="200" value={storyDraft.title} onChange={(event) => setStoryDraft({ ...storyDraft, title: event.target.value })} /></label>
+                <label>متن فصل<textarea rows="5" maxLength="4000" value={storyDraft.description} onChange={(event) => setStoryDraft({ ...storyDraft, description: event.target.value })} /></label>
+                <label>توضیح عکس برای دسترس‌پذیری<input value={storyDraft.photoLabel} onChange={(event) => setStoryDraft({ ...storyDraft, photoLabel: event.target.value })} /></label>
+                <label className="admin-upload-label"><ImagePlus size={19} /> عکس فصل<input type="file" accept="image/*" disabled={busy} onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; setBusy(true); try { setStoryImageFile(await optimizeImage(file)) } finally { setBusy(false) } }} />{storyImageFile?.name || storyDraft.image || 'بدون تغییر'}</label>
+                {error && <p className="admin-form-error" role="alert">{error}</p>}
+                <div className="admin-form-actions"><button type="button" className="admin-secondary-button" onClick={clearEditor}>انصراف</button><button type="submit" className="admin-primary-button" disabled={busy}><Save size={17} /> ذخیره فصل</button></div>
+              </form>
+            )}
+            <div className="admin-record-list">
+              {story.map((chapter) => (
+                <article className="admin-record" key={chapter.id}>
+                  <span className="admin-product-thumb" aria-hidden="true">{chapter.image ? <img src={chapter.image} alt="" /> : <ImagePlus size={17} />}</span>
+                  <div className="admin-record-copy"><strong>{chapter.chapter} · {chapter.title}</strong><span>ترتیب {chapter.order}</span></div>
+                  <div className="admin-record-actions">
+                    <button type="button" className="admin-icon-button" onClick={() => { setError(''); setStoryImageFile(null); setStoryDraft({ ...chapter, order: chapter.order ?? 0 }) }} aria-label={`ویرایش ${chapter.title}`}><Pencil size={17} /></button>
+                    <button type="button" className="admin-icon-button admin-icon-button--danger" onClick={() => setPendingDelete({ type: 'story', item: chapter })} aria-label={`حذف ${chapter.title}`}><Trash2 size={17} /></button>
+                  </div>
+                </article>
+              ))}
+              {!story.length && <p className="admin-empty">هنوز فصلی ثبت نشده است.</p>}
+            </div>
+          </section>
         ) : (
           <section aria-labelledby="admin-site-settings-title">
             <div className="admin-section-heading"><h2 id="admin-site-settings-title">تنظیمات متن‌های سایت</h2></div>
@@ -199,7 +246,7 @@ export function AdminPanel({ onClose }) {
         {error && !categoryDraft && !productDraft && activeTab !== 'site-settings' && <p className="admin-form-error" role="alert">{error}</p>}
       </main>
       <Toast message={toastMessage} onDismiss={() => setToastMessage('')} />
-      {pendingDelete && <ConfirmDialog message={pendingDelete.type === 'category' ? `دسته‌ی «${pendingDelete.item.title}» و پیوندهای محصولاتش حذف شود؟` : `محصول «${pendingDelete.item.name}» حذف شود؟`} onConfirm={confirmDelete} onCancel={() => setPendingDelete(null)} busy={busy} />}
+      {pendingDelete && <ConfirmDialog message={pendingDelete.type === 'category' ? `دسته‌ی «${pendingDelete.item.title}» و پیوندهای محصولاتش حذف شود؟` : pendingDelete.type === 'story' ? `فصل «${pendingDelete.item.title}» حذف شود؟` : `محصول «${pendingDelete.item.name}» حذف شود؟`} onConfirm={confirmDelete} onCancel={() => setPendingDelete(null)} busy={busy} />}
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { useAppData } from '../hooks/useAppData.js'
 import { BackButton } from './BackButton.jsx'
 
-export function OurStoryView({ onBack, mascotAnchorRef, mascotInteractionProps }) {
+export function OurStoryView({ onBack, mascotAnchorRef, mascotInteractionProps, mascotVisible = true }) {
   const prefersReducedMotion = useReducedMotion()
   const { story } = useAppData()
 
@@ -18,7 +18,9 @@ export function OurStoryView({ onBack, mascotAnchorRef, mascotInteractionProps }
         </div>
         <aside className="header-mascot" aria-label="مسکات تریاپانی">
           <div className="header-speech">یه قصه‌ی گرم از تریاپانی!</div>
-          <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps} />
+          <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps}>
+            {mascotVisible && <img src="/assets/mascot.webp" alt="" className="header-mascot-image" />}
+          </button>
         </aside>
       </header>
 

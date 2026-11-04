@@ -20,6 +20,7 @@ function getAnchorPosition(frame, anchor) {
 function AppContent() {
   const { siteSettings } = useAppData()
   const [screen, setScreen] = useState('welcome')
+  const [introPhase, setIntroPhase] = useState('holding')
   const [mascotBounds, setMascotBounds] = useState(null)
   const frameRef = useRef(null)
   const welcomeMascotRef = useRef(null)
@@ -34,11 +35,29 @@ function AppContent() {
     const headerAnchor = headerMascotRef.current
     if (!frame || !welcomeAnchor || !headerAnchor) return
 
-    setMascotBounds({
-      welcome: getAnchorPosition(frame, welcomeAnchor),
-      header: getAnchorPosition(frame, headerAnchor),
-    })
+    const measure = () => {
+      setMascotBounds({
+        welcome: getAnchorPosition(frame, welcomeAnchor),
+        header: getAnchorPosition(frame, headerAnchor),
+      })
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(frame)
+    observer.observe(welcomeAnchor)
+    observer.observe(headerAnchor)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
   }, [])
+
+  useEffect(() => {
+    if (screen !== 'welcome' || prefersReducedMotion) return undefined
+    const timerId = window.setTimeout(() => setIntroPhase('flight'), 3000)
+    return () => window.clearTimeout(timerId)
+  }, [screen, prefersReducedMotion])
 
   const startMenuTransition = useCallback(() => {
     if (transitionTimerRef.current !== null) {
@@ -48,19 +67,20 @@ function AppContent() {
     if (transitionStartedRef.current) return
 
     transitionStartedRef.current = true
+    setIntroPhase('flight')
     setScreen('transitioning')
   }, [])
 
   useEffect(() => {
     if (screen !== 'welcome' || transitionStartedRef.current) return undefined
 
-    const timeoutId = window.setTimeout(startMenuTransition, 3500)
+    const timeoutId = window.setTimeout(startMenuTransition, 3000)
     transitionTimerRef.current = timeoutId
     return () => {
       window.clearTimeout(timeoutId)
       if (transitionTimerRef.current === timeoutId) transitionTimerRef.current = null
     }
-  }, [screen, startMenuTransition])
+  }, [screen, startMenuTransition, prefersReducedMotion])
 
   const returnToWelcome = useCallback(() => {
     if (screen !== 'menu') return
@@ -99,24 +119,24 @@ function AppContent() {
           />
         </div>
         <div className={`app-layer ${isMenuVisible ? 'app-layer--active' : 'app-layer--inactive'}`} aria-hidden={!isMenuVisible}>
-          <CategoriesScreen onBack={returnToWelcome} mascotAnchorRef={headerMascotRef} />
+          <CategoriesScreen onBack={returnToWelcome} mascotAnchorRef={headerMascotRef} mascotVisible={screen === 'menu'} />
         </div>
 
-        {mascotBounds && mascotDestination && (
+        {mascotBounds && (screen === 'welcome' || screen === 'transitioning' || screen === 'returning') && (
           <motion.img
             src="/assets/mascot.webp"
             alt="مسکات لبخندزن تریاپانی با لباس نارنجی"
             className="mascot-flight"
             initial={mascotBounds.welcome}
-            animate={mascotDestination}
+            animate={screen === 'welcome' && introPhase === 'holding' ? mascotBounds.welcome : mascotDestination}
             transition={
-              screen === 'transitioning' || screen === 'returning'
-                ? prefersReducedMotion
+              screen === 'welcome' && introPhase === 'holding'
+                ? { duration: 0 }
+                : prefersReducedMotion
                   ? { duration: 0.01 }
                   : { type: 'spring', stiffness: 150, damping: 23, mass: 0.85 }
-                : { duration: 0 }
             }
-            onAnimationComplete={handleMascotAnimationComplete}
+            onAnimationComplete={screen === 'transitioning' || screen === 'returning' ? handleMascotAnimationComplete : undefined}
           />
         )}
       </section>

@@ -12,7 +12,7 @@ const moods = [
   { id: 'surprise', title: 'سورپرایزم کن!', icon: Sparkles },
 ]
 
-export function SpecialOffersScreen({ onBack, mascotAnchorRef, mascotInteractionProps }) {
+export function SpecialOffersScreen({ onBack, mascotAnchorRef, mascotInteractionProps, mascotVisible = true }) {
   const { offers } = useAppData()
   const [selectedMood, setSelectedMood] = useState('coffee')
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -31,7 +31,9 @@ export function SpecialOffersScreen({ onBack, mascotAnchorRef, mascotInteraction
         </div>
         <aside className="header-mascot" aria-label="راهنمای پیشنهادهای تریاپانی">
           <div className="header-speech">بگو تو چه مودی هستی؟</div>
-          <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps} />
+          <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps}>
+            {mascotVisible && <img src="/assets/mascot.webp" alt="" className="header-mascot-image" />}
+          </button>
         </aside>
       </header>
 
@@ -63,7 +65,9 @@ export function SpecialOffersScreen({ onBack, mascotAnchorRef, mascotInteraction
                 <button key={product.id} type="button" className="offer-card" onClick={() => setSelectedProduct(product)} aria-label={`مشاهده جزئیات ${product.name}`}>
                   <div className="offer-card-media">
                     <ProductImage product={product} variant="card" />
-                    {product.badge && <span className="offer-badge offer-badge--overlay"><Star size={15} fill="currentColor" aria-hidden="true" />{product.badge}</span>}
+                    {(product.categoryIds?.includes('favorites') || product.categoryId === 'favorites' || product.badge) && (
+                      <span className="offer-badge offer-badge--overlay"><Star size={15} fill="currentColor" aria-hidden="true" />{product.categoryIds?.includes('favorites') || product.categoryId === 'favorites' ? 'محبوب این هفته' : product.badge}</span>
+                    )}
                   </div>
                   <span className="offer-card-copy">
                     <strong className="offer-name">{product.name}</strong>

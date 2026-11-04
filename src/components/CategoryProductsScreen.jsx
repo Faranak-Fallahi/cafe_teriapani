@@ -9,7 +9,7 @@ import { Toast } from './Toast.jsx'
 import { ProductImage } from './ProductImage.jsx'
 import { BackButton } from './BackButton.jsx'
 
-export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef, mascotInteractionProps }) {
+export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef, mascotInteractionProps, mascotVisible = true }) {
   const { categories, products, isAdmin, saveCategory, saveProduct } = useAppData()
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState('all')
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -28,7 +28,6 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef, ma
   const visibleProducts = selectedSubcategoryId === 'all'
     ? categoryProducts
     : categoryProducts.filter((product) => product.subcategoryId === selectedSubcategoryId)
-
   useLayoutEffect(() => {
     const track = subcategoryTrackRef.current
     if (!track) return undefined
@@ -115,7 +114,9 @@ export function CategoryProductsScreen({ categoryId, onBack, mascotAnchorRef, ma
           ) : (
             <div className="header-speech">{category.mascotMessage}</div>
           )}
-          <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps} />
+          <button ref={mascotAnchorRef} type="button" className="header-mascot-anchor h-14 w-14" aria-label="برای فعال‌کردن ورود مدیر، مسکات را نگه دارید" {...mascotInteractionProps}>
+            {mascotVisible && <img src="/assets/mascot.webp" alt="" className="header-mascot-image" />}
+          </button>
         </aside>
       </header>
 
