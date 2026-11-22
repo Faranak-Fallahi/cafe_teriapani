@@ -8,6 +8,11 @@ import { storyChapters } from '../src/data/storyChapters.js'
 const url = process.env.POCKETBASE_URL || 'http://127.0.0.1:8090'
 const email = process.env.POCKETBASE_ADMIN_EMAIL
 const password = process.env.POCKETBASE_ADMIN_PASSWORD
+const allowOverwrite = process.env.POCKETBASE_ALLOW_SAMPLE_OVERWRITE === 'true'
+
+if (/^https?:\/\//i.test(url) && !/^(https?:\/\/)?(127\.0\.0\.1|localhost)(:\d+)?\/?$/i.test(url) && !allowOverwrite) {
+  throw new Error('Refusing to seed a non-local PocketBase URL. Set POCKETBASE_ALLOW_SAMPLE_OVERWRITE=true only when replacing its sample data is intentional.')
+}
 
 if (!email || !password) {
   throw new Error('Set POCKETBASE_ADMIN_EMAIL and POCKETBASE_ADMIN_PASSWORD before seeding.')
