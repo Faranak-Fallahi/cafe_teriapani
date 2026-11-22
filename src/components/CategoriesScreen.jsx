@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Coffee } from 'lucide-react'
+import { BookOpen, Coffee, Mail, Send } from 'lucide-react'
 import { useAppData } from '../hooks/useAppData.js'
 import { CategoryCard } from './CategoryCard.jsx'
 import { CategoryProductsScreen } from './CategoryProductsScreen.jsx'
@@ -134,6 +134,19 @@ export function CategoriesScreen({ onBack, mascotAnchorRef, mascotVisible = true
           </section>
           )}
           <footer className="admin-entry-footer">
+            <section className="creator-credit" aria-label="اطلاعات سازندهٔ سایت">
+              <p className="creator-credit-title">طراحی و توسعه: فرانک فلاحی</p>
+              <nav className="creator-credit-links" aria-label="راه‌های ارتباط با سازنده">
+                <a href="https://t.me/faranak2420" target="_blank" rel="noopener noreferrer" aria-label="تلگرام فرانک فلاحی (در تب جدید)">
+                  <Send size={15} aria-hidden="true" />
+                  <span>تلگرام</span>
+                </a>
+                <a href="mailto:faranakfallahi422@gmail.com" target="_blank" rel="noopener noreferrer" aria-label="ایمیل فرانک فلاحی (در تب جدید)">
+                  <Mail size={15} aria-hidden="true" />
+                  <span>ایمیل</span>
+                </a>
+              </nav>
+            </section>
             <AdminEntryButton visible isAdmin={isAdmin} onClick={openAdmin} variant="footer" />
           </footer>
         </div>

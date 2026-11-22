@@ -287,7 +287,10 @@
 .admin-entry-footer {
   display: flex;
   flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  gap: 0.15rem;
   margin-top: auto;
   padding-top: 0.75rem;
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -305,6 +308,49 @@
 .admin-entry-link:hover,
 .admin-entry-link:focus-visible { color: #3d2924; }
 .admin-entry-link:focus-visible { outline: 2px solid #3d2924; outline-offset: 2px; }
+.creator-credit {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem 0.15rem;
+  color: rgb(61 41 36 / 66%);
+  text-align: center;
+}
+.creator-credit-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.creator-credit-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.75rem;
+  direction: rtl;
+}
+.creator-credit-links a {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 0.4rem;
+  padding: 0.2rem 0.4rem;
+  color: #7b4d39;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+.creator-credit-links a:hover {
+  background: rgb(242 106 46 / 9%);
+  color: #c94f1e;
+}
+.creator-credit-links a:focus-visible {
+  outline: 2px solid #3d2924;
+  outline-offset: 2px;
+}
 .admin-entry-floating {
   position: fixed;
   z-index: 45;
